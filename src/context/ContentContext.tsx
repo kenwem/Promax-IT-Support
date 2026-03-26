@@ -10,7 +10,7 @@ const defaultContent = {
   whatsapp: "https://wa.me/+2348022362666",
   address: "221 Ijesha Road, Surulere, Lagos, Nigeria",
   slogan: "Ready to Help — Anytime IT Matters.",
-  yearEstablished: "Since January 2025",
+  yearEstablished: "January 2025",
   services: [
     {
       id: "network",

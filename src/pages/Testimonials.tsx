@@ -1,6 +1,7 @@
 import React from 'react';
 import { Quote, Star } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
+import { Link } from 'react-router-dom';
 
 const Testimonials = () => {
   const { content } = useContent();
@@ -55,12 +56,12 @@ const Testimonials = () => {
       <section className="py-20 bg-white text-center">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold text-slate-900 mb-6">Join our list of satisfied clients</h2>
-          <a 
-            href="/contact" 
+          <Link 
+            to="/contact" 
             className="inline-block bg-brand-green hover:bg-emerald-600 text-white px-8 py-3 rounded-full font-bold transition-colors shadow-lg"
           >
             Get Started Today
-          </a>
+          </Link>
         </div>
       </section>
     </div>

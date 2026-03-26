@@ -1,6 +1,7 @@
 import React from 'react';
 import { Network, Server, Mail, Shield, Headphones, Lightbulb, GraduationCap, Check } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
+import { Link } from 'react-router-dom';
 
 const iconMap: Record<string, React.ReactNode> = {
   Network: <Network className="w-10 h-10 text-white" />,
@@ -51,10 +52,10 @@ const Services = () => {
                   </ul>
                 </div>
                 <div className="p-6 border-t border-slate-100 bg-slate-50">
-                  <a href="/contact" className="text-brand-blue font-bold text-sm hover:text-brand-green transition-colors flex items-center justify-between">
+                  <Link to="/contact" className="text-brand-blue font-bold text-sm hover:text-brand-green transition-colors flex items-center justify-between">
                     Request this service
                     <span className="text-xl">&rarr;</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -69,12 +70,12 @@ const Services = () => {
           <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
             Our experts can conduct a technology audit to identify gaps and opportunities in your current infrastructure.
           </p>
-          <a 
-            href="/contact" 
+          <Link 
+            to="/contact" 
             className="inline-block bg-brand-green hover:bg-emerald-600 text-white px-8 py-3 rounded-full font-bold transition-colors shadow-lg"
           >
             Schedule a Free Consultation
-          </a>
+          </Link>
         </div>
       </section>
     </div>

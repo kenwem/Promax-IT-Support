@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, ArrowRight } from 'lucide-react';
+import { Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
 import AdminModal from './AdminModal';
 import { useContent } from '../context/ContentContext';
 
@@ -24,20 +24,6 @@ const Footer = () => {
               Bridging the gap between enterprise-level IT services and small business affordability. 
               Reliable, secure, and cost-effective technology solutions.
             </p>
-            <div className="flex gap-4">
-              <a href="#" className="bg-slate-800 p-2 rounded-full hover:bg-brand-blue transition-colors text-white">
-                <Facebook size={18} />
-              </a>
-              <a href="#" className="bg-slate-800 p-2 rounded-full hover:bg-brand-blue transition-colors text-white">
-                <Twitter size={18} />
-              </a>
-              <a href="#" className="bg-slate-800 p-2 rounded-full hover:bg-brand-blue transition-colors text-white">
-                <Linkedin size={18} />
-              </a>
-              <a href="#" className="bg-slate-800 p-2 rounded-full hover:bg-brand-blue transition-colors text-white">
-                <Instagram size={18} />
-              </a>
-            </div>
           </div>
 
           {/* Quick Links */}

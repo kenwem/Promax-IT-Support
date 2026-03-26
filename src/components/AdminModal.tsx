@@ -13,6 +13,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   const [viewState, setViewState] = useState<'list' | 'edit'>('list');
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>(null);
+  const [blogEditTab, setBlogEditTab] = useState<'content' | 'preview'>('content');
 
   // Custom alerts and confirms (since window.alert/confirm are blocked in iframes)
   const [notification, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null);
@@ -61,6 +62,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     setEditIndex(index);
     setEditData({ ...item });
     setViewState('edit');
+    setBlogEditTab('content');
   };
 
   const handleAddNew = (type: string) => {
@@ -88,6 +90,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
       });
     }
     setViewState('edit');
+    setBlogEditTab('content');
   };
 
   const handleDeleteClick = (type: string, index: number) => {
@@ -210,7 +213,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none"
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none"
                     placeholder="Enter password (admin123)"
                   />
                 </div>
@@ -231,7 +234,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.heroTitle1}
                           onChange={(e) => setFormData({...formData, heroTitle1: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -240,7 +243,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.heroTitle2}
                           onChange={(e) => setFormData({...formData, heroTitle2: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                     </div>
@@ -249,7 +252,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                       <textarea 
                         value={formData.heroSubtitle}
                         onChange={(e) => setFormData({...formData, heroSubtitle: e.target.value})}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                        className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         rows={3}
                       />
                     </div>
@@ -258,7 +261,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                       <textarea 
                         value={formData.aboutText}
                         onChange={(e) => setFormData({...formData, aboutText: e.target.value})}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                        className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         rows={4}
                       />
                     </div>
@@ -269,7 +272,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.phone}
                           onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -278,7 +281,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.email}
                           onChange={(e) => setFormData({...formData, email: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -287,7 +290,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.address || ''}
                           onChange={(e) => setFormData({...formData, address: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -296,7 +299,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.whatsapp || ''}
                           onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -305,7 +308,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.slogan || ''}
                           onChange={(e) => setFormData({...formData, slogan: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -314,7 +317,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.yearEstablished || ''}
                           onChange={(e) => setFormData({...formData, yearEstablished: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                     </div>
@@ -364,7 +367,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             type="text"
                             value={editData.title || ''}
                             onChange={(e) => setEditData({...editData, title: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                           />
                         </div>
                         <div>
@@ -372,7 +375,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           <select 
                             value={editData.iconName || 'Server'}
                             onChange={(e) => setEditData({...editData, iconName: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none bg-white"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none bg-white"
                           >
                             <option value="Network">Network (Globe)</option>
                             <option value="Server">Server</option>
@@ -390,7 +393,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={editData.desc || ''}
                           onChange={(e) => setEditData({...editData, desc: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>
                       <div>
@@ -398,7 +401,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                         <textarea 
                           value={editData.features?.join(', ') || ''}
                           onChange={(e) => setEditData({...editData, features: e.target.value.split(',').map((s: string) => s.trim())})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                           rows={4}
                         />
                       </div>
@@ -454,7 +457,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             type="text"
                             value={editData.name || ''}
                             onChange={(e) => setEditData({...editData, name: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                           />
                         </div>
                         <div>
@@ -463,7 +466,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             type="text"
                             value={editData.role || ''}
                             onChange={(e) => setEditData({...editData, role: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                           />
                         </div>
                       </div>
@@ -472,7 +475,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                         <textarea 
                           value={editData.content || ''}
                           onChange={(e) => setEditData({...editData, content: e.target.value})}
-                          className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue outline-none"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                           rows={4}
                         />
                       </div>
@@ -542,13 +545,22 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
 
                     {/* Tabs */}
                     <div className="flex gap-6 border-b border-slate-200 mb-6">
-                      <button className="border-b-2 border-[#026fc2] text-[#026fc2] pb-3 font-medium text-sm">Content</button>
-                      <button className="text-slate-500 pb-3 font-medium text-sm hover:text-slate-700 transition-colors">Seo</button>
-                      <button className="text-slate-500 pb-3 font-medium text-sm hover:text-slate-700 transition-colors">Preview</button>
+                      <button 
+                        onClick={() => setBlogEditTab('content')}
+                        className={`pb-3 font-medium text-sm ${blogEditTab === 'content' ? 'border-b-2 border-[#026fc2] text-[#026fc2]' : 'text-slate-500 hover:text-slate-700 transition-colors'}`}
+                      >
+                        Content
+                      </button>
+                      <button 
+                        onClick={() => setBlogEditTab('preview')}
+                        className={`pb-3 font-medium text-sm ${blogEditTab === 'preview' ? 'border-b-2 border-[#026fc2] text-[#026fc2]' : 'text-slate-500 hover:text-slate-700 transition-colors'}`}
+                      >
+                        Preview
+                      </button>
                     </div>
 
-                    {/* 2-col layout */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {blogEditTab === 'content' ? (
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                       {/* Left Col */}
                       <div className="col-span-2 space-y-6">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -558,7 +570,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               type="text" 
                               value={editData.title || ''} 
                               onChange={e => setEditData({...editData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')})} 
-                              className="w-full px-3 py-2 border-2 border-[#026fc2] rounded-md outline-none" 
+                              className="w-full px-3 py-2 border-2 border-[#026fc2] text-slate-900 rounded-md outline-none" 
                               placeholder="Post title" 
                             />
                           </div>
@@ -579,10 +591,24 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 type="text" 
                                 value={editData.image || ''} 
                                 onChange={e => setEditData({...editData, image: e.target.value})} 
-                                className="flex-1 px-3 py-2 border border-slate-700 bg-[#2d2d2d] text-slate-200 rounded-md outline-none focus:border-[#026fc2]" 
+                                className="flex-1 px-3 py-2 border border-slate-300 bg-white text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
                                 placeholder="https://..." 
                               />
-                              <button className="p-2 border border-slate-200 rounded-md bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                id="image-upload" 
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => setEditData({...editData, image: reader.result as string});
+                                    reader.readAsDataURL(file);
+                                  }
+                                }} 
+                              />
+                              <button onClick={() => document.getElementById('image-upload')?.click()} className="p-2 border border-slate-200 rounded-md bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
                                 <ImageIcon size={20}/>
                               </button>
                             </div>
@@ -593,7 +619,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <textarea 
                               value={editData.excerpt || ''} 
                               onChange={e => setEditData({...editData, excerpt: e.target.value})} 
-                              className="w-full px-3 py-2 border border-slate-200 rounded-md outline-none focus:border-[#026fc2]" 
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
                               rows={2}
                               placeholder="Brief summary of the post..."
                             ></textarea>
@@ -603,7 +629,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <textarea 
                               value={editData.content || ''} 
                               onChange={e => setEditData({...editData, content: e.target.value})} 
-                              className="w-full px-4 py-3 border border-slate-700 bg-[#2d2d2d] text-slate-200 rounded-md h-80 font-mono text-sm outline-none resize-y focus:border-[#026fc2]" 
+                              className="w-full px-4 py-3 border border-slate-300 bg-white text-slate-900 rounded-md h-80 font-mono text-sm outline-none resize-y focus:border-[#026fc2]" 
                               placeholder="Write your story here..."
                             ></textarea>
                           </div>
@@ -620,7 +646,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <select 
                               value={editData.status || 'Draft'} 
                               onChange={e => setEditData({...editData, status: e.target.value})} 
-                              className="w-full px-3 py-2 border border-slate-200 rounded-md outline-none focus:border-[#026fc2] bg-white"
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2] bg-white"
                             >
                               <option value="Draft">Draft</option>
                               <option value="Published">Published</option>
@@ -632,7 +658,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               type="text" 
                               value={editData.date || ''} 
                               onChange={e => setEditData({...editData, date: e.target.value})} 
-                              className="w-full px-3 py-2 border border-slate-200 rounded-md outline-none focus:border-[#026fc2]" 
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
                               placeholder="DD/MM/YYYY, HH:MM AM" 
                             />
                           </div>
@@ -656,7 +682,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <select 
                               value={editData.category || ''} 
                               onChange={e => setEditData({...editData, category: e.target.value})} 
-                              className="w-full px-3 py-2 border border-slate-200 rounded-md outline-none focus:border-[#026fc2] bg-white"
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2] bg-white"
                             >
                               <option value="Destinations">Destinations</option>
                               <option value="Security">Security</option>
@@ -673,12 +699,37 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               type="text" 
                               value={editData.tags?.join(', ') || ''} 
                               onChange={e => setEditData({...editData, tags: e.target.value.split(',').map((t: string)=>t.trim())})} 
-                              className="w-full px-3 py-2 border border-slate-200 rounded-md outline-none focus:border-[#026fc2]" 
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
                             />
                           </div>
                         </div>
                       </div>
                     </div>
+                    ) : (
+                      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 max-w-4xl mx-auto">
+                        {editData.image && (
+                          <img src={editData.image} alt={editData.title} className="w-full h-[400px] object-cover rounded-xl mb-8" />
+                        )}
+                        <div className="flex items-center gap-4 mb-6">
+                          <span className="bg-[#026fc2]/10 text-[#026fc2] px-3 py-1 rounded-full text-sm font-medium">
+                            {editData.category || 'Uncategorized'}
+                          </span>
+                          <span className="text-slate-500 text-sm">{editData.date || 'No date'}</span>
+                          <span className="text-slate-500 text-sm">By {editData.author || 'Admin'}</span>
+                        </div>
+                        <h1 className="text-4xl font-bold text-slate-900 mb-6">{editData.title || 'Untitled Post'}</h1>
+                        {editData.tags && editData.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-8">
+                            {editData.tags.map((tag: string, i: number) => (
+                              <span key={i} className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">#{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="prose prose-lg max-w-none text-slate-700 whitespace-pre-line">
+                          {editData.content || 'Write your story here...'}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

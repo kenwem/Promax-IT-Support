@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import Logo from './Logo';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,14 +48,8 @@ const Navbar = () => {
 
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="bg-brand-blue text-white p-2 rounded-lg group-hover:bg-brand-green transition-colors duration-300">
-            <span className="font-bold text-xl tracking-tighter">PM</span>
-          </div>
-          <div className={`flex flex-col ${scrolled || !isHome ? 'text-slate-900' : 'text-white shadow-black/50 drop-shadow-md'}`}>
-            <span className="font-bold text-xl leading-none">ProMax</span>
-            <span className="text-xs font-medium tracking-widest uppercase">IT Support</span>
-          </div>
+        <Link to="/" className="flex items-center gap-2 group scale-75 origin-left">
+          <Logo darkText={scrolled || !isHome} showSlogan={false} />
         </Link>
 
         {/* Desktop Navigation */}

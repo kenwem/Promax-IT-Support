@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
 import AdminModal from './AdminModal';
 import { useContent } from '../context/ContentContext';
+import Logo from './Logo';
 
 const Footer = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -14,11 +15,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* Company Info */}
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-brand-green text-white p-1.5 rounded">
-                <span className="font-bold text-lg">PM</span>
-              </div>
-              <span className="font-bold text-xl text-white">ProMax IT Support</span>
+            <div className="mb-6 scale-75 origin-left">
+              <Logo darkText={false} showSlogan={false} />
             </div>
             <p className="text-slate-400 mb-6 leading-relaxed">
               Bridging the gap between enterprise-level IT services and small business affordability. 
@@ -79,7 +77,7 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="text-brand-green shrink-0 mt-1" size={18} />
-                <span>{content.address}</span>
+                <span className="whitespace-pre-line">{content.address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-brand-green shrink-0" size={18} />
@@ -103,7 +101,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
-          <p>&copy; 2026 <span onClick={() => setIsAdminOpen(true)} className="cursor-pointer hover:text-white transition-colors">ProMax</span> IT Support Limited. All Rights Reserved.</p>
+          <p>&copy; {content.copyrightYear || '2026'} <span onClick={() => setIsAdminOpen(true)} className="cursor-pointer hover:text-white transition-colors">ProMax</span> IT Support Limited. All Rights Reserved.</p>
         </div>
       </div>
       <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />

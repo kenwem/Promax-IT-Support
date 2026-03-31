@@ -317,6 +317,16 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                           type="text"
                           value={formData.yearEstablished || ''}
                           onChange={(e) => setFormData({...formData, yearEstablished: e.target.value})}
+                          placeholder="e.g. January 2025"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Copyright Year</label>
+                        <input 
+                          type="text"
+                          value={formData.copyrightYear || ''}
+                          onChange={(e) => setFormData({...formData, copyrightYear: e.target.value})}
                           className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
                         />
                       </div>

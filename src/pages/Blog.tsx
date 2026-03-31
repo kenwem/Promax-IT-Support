@@ -75,48 +75,54 @@ const Blog = () => {
             <h2 className="text-2xl font-bold text-slate-800 uppercase tracking-wider">Latest Posts</h2>
           </div>
 
-          {/* Grid of Posts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {regularPosts.map((post: any) => (
-              <article key={post.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-slate-100 hover:-translate-y-1">
-                <div className="relative overflow-hidden h-60">
-                  <img 
-                    src={post.image} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-sm text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-8 flex flex-col flex-grow">
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 font-medium">
-                    <span className="flex items-center gap-1.5"><Calendar size={14} /> {post.date.split(',')[0]}</span>
-                    <span className="flex items-center gap-1.5"><Clock size={14} /> 5 min read</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-brand-blue transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <p className="text-slate-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-grow">
-                    {post.excerpt}
-                  </p>
-                  <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-auto">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-xs">
-                        {post.author.charAt(0)}
-                      </div>
-                      <span className="text-sm font-medium text-slate-700">{post.author}</span>
+          {posts.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100">
+              <p className="text-slate-500 text-lg">No blog posts available at the moment. Check back soon!</p>
+            </div>
+          ) : (
+            /* Grid of Posts */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {regularPosts.map((post: any) => (
+                <article key={post.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-slate-100 hover:-translate-y-1">
+                  <div className="relative overflow-hidden h-60">
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-white/90 backdrop-blur-sm text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                        {post.category}
+                      </span>
                     </div>
-                    <a href="#" className="text-brand-blue font-bold hover:text-brand-green transition-colors p-2 rounded-full hover:bg-slate-50">
-                      <ArrowRight size={20} />
-                    </a>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
+                  <div className="p-8 flex flex-col flex-grow">
+                    <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 font-medium">
+                      <span className="flex items-center gap-1.5"><Calendar size={14} /> {post.date.split(',')[0]}</span>
+                      <span className="flex items-center gap-1.5"><Clock size={14} /> 5 min read</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-brand-blue transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-slate-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-grow">
+                      {post.excerpt}
+                    </p>
+                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-auto">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-xs">
+                          {post.author.charAt(0)}
+                        </div>
+                        <span className="text-sm font-medium text-slate-700">{post.author}</span>
+                      </div>
+                      <a href="#" className="text-brand-blue font-bold hover:text-brand-green transition-colors p-2 rounded-full hover:bg-slate-50">
+                        <ArrowRight size={20} />
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
         </div>
       </section>

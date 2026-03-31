@@ -8,9 +8,10 @@ const defaultContent = {
   phone: "+234 802 236 2666",
   email: "hello@promaxitsupport.com.ng",
   whatsapp: "https://wa.me/+2348022362666",
-  address: "221 Ijesha Road, Surulere, Lagos, Nigeria",
+  address: "221 Ijesha Road, Surulere, Lagos, Nigeria\n(6.4398771, 3.9229101) Livingstone Estate, Epenlenmeje Orofun Ibeju Lekki Lagos",
   slogan: "Ready to Help — Anytime IT Matters.",
   yearEstablished: "January 2025",
+  copyrightYear: "2026",
   services: [
     {
       id: "network",
@@ -134,50 +135,7 @@ const defaultContent = {
       rating: 4
     }
   ],
-  blogPosts: [
-    {
-      id: 1,
-      title: "Why Cybersecurity is Critical for SMEs in 2026",
-      slug: "why-cybersecurity-is-critical",
-      excerpt: "Small businesses are increasingly becoming targets for cyberattacks. Learn how to protect your assets without breaking the bank.",
-      content: "Small businesses are increasingly becoming targets for cyberattacks. Learn how to protect your assets without breaking the bank.\n\nCybersecurity is no longer just an enterprise issue. SMEs are now the primary target for many cybercriminals because they often lack the robust defenses of larger corporations. Implementing basic security hygiene, such as multi-factor authentication, regular backups, and employee training, can drastically reduce your risk profile.",
-      date: "20/02/2026, 09:00 AM",
-      author: "Admin",
-      category: "Security",
-      tags: ["Cybersecurity", "SME", "Protection"],
-      image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      status: "Published",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "The Benefits of Managed IT Services",
-      slug: "benefits-of-managed-it-services",
-      excerpt: "Discover how outsourcing your IT needs can save costs and improve operational efficiency for your growing business.",
-      content: "Discover how outsourcing your IT needs can save costs and improve operational efficiency for your growing business.\n\nManaged IT services provide predictable costs, proactive maintenance, and access to a team of experts without the overhead of full-time employees. This allows business owners to focus on their core competencies rather than worrying about IT infrastructure.",
-      date: "15/02/2026, 10:30 AM",
-      author: "Admin",
-      category: "Business",
-      tags: ["Managed IT", "Business Growth", "Outsourcing"],
-      image: "https://images.unsplash.com/photo-1558494949-ef526b0042a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      status: "Published",
-      featured: false
-    },
-    {
-      id: 3,
-      title: "Understanding Cloud Migration: A Beginner's Guide",
-      slug: "understanding-cloud-migration",
-      excerpt: "Moving to the cloud doesn't have to be scary. Here is a step-by-step guide to understanding the process and benefits.",
-      content: "Moving to the cloud doesn't have to be scary. Here is a step-by-step guide to understanding the process and benefits.\n\nCloud migration involves moving data, applications, and other business elements to a cloud computing environment. Benefits include scalability, cost savings, and improved collaboration. The key to a successful migration is thorough planning and choosing the right cloud model (public, private, or hybrid) for your specific needs.",
-      date: "10/02/2026, 02:15 PM",
-      author: "Admin",
-      category: "Cloud",
-      tags: ["Cloud", "Migration", "Guide"],
-      image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      status: "Published",
-      featured: false
-    }
-  ]
+  blogPosts: []
 };
 
 export const ContentContext = createContext<any>(null);
@@ -185,7 +143,24 @@ export const ContentContext = createContext<any>(null);
 export const ContentProvider = ({ children }: { children: React.ReactNode }) => {
   const [content, setContent] = useState(() => {
     const saved = localStorage.getItem('promax_content');
-    return saved ? JSON.parse(saved) : defaultContent;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge missing fields like copyrightYear
+      const merged = { ...defaultContent, ...parsed };
+      
+      // Force update address if it's the old default
+      if (parsed.address === "221 Ijesha Road, Surulere, Lagos, Nigeria") {
+        merged.address = defaultContent.address;
+      }
+
+      // Fix the "Since Since" issue by stripping "Since " from the saved yearEstablished
+      if (typeof merged.yearEstablished === 'string' && merged.yearEstablished.toLowerCase().startsWith('since ')) {
+        merged.yearEstablished = merged.yearEstablished.substring(6).trim();
+      }
+      
+      return merged;
+    }
+    return defaultContent;
   });
 
   useEffect(() => {

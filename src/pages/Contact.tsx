@@ -22,25 +22,44 @@ const Contact = () => {
     }
   }, [location]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // We do NOT prevent default here because we want the form to submit natively
-    // to FormSubmit.co in a new tab (target="_blank") to handle Captcha/Activation.
-    
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    setSubmitStatus('success');
-    
+    setSubmitStatus('idle');
+
     const form = e.currentTarget;
-    
-    // Reset the form and status after a short delay
-    setTimeout(() => {
-      form.reset();
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("https://formspree.io/f/xpwqzvda", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        form.reset();
+      } else {
+        const result = await response.json();
+        console.error('Formspree Error:', result);
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error('Submission Error:', error);
+      setSubmitStatus('error');
+    } finally {
       setIsSubmitting(false);
       
-      // Clear the success message after 8 seconds
+      // Clear the status message after 8 seconds
       setTimeout(() => {
         setSubmitStatus('idle');
       }, 8000);
-    }, 1000);
+    }
   };
 
   return (
@@ -62,15 +81,13 @@ const Contact = () => {
             <div id="contact-form" className="scroll-mt-24">
               <h2 className="text-3xl font-bold text-slate-900 mb-6">Send us a Message</h2>
               <form 
-                action={`https://formsubmit.co/${content.email}`} 
+                action={`https://formspree.io/f/xpwqzvda`} 
                 method="POST" 
-                target="_blank"
                 className="space-y-6" 
                 onSubmit={handleSubmit}
               >
-                {/* FormSubmit Configuration */}
+                {/* Formspree Configuration */}
                 <input type="hidden" name="_subject" value="New Contact Form Submission" />
-                <input type="hidden" name="_template" value="box" />
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

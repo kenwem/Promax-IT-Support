@@ -1,13 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Lock, LayoutDashboard, Server, MessageSquare, FileText, Plus, Edit, Trash2, ArrowLeft, Image as ImageIcon, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { 
+  X, 
+  Save, 
+  Lock, 
+  LayoutDashboard, 
+  Server, 
+  MessageSquare, 
+  FileText, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  ArrowLeft, 
+  Image as ImageIcon, 
+  AlertCircle, 
+  CheckCircle2, 
+  LogOut, 
+  Key, 
+  CheckCircle, 
+  MessageCircle,
+  Eye,
+  EyeOff
+} from 'lucide-react';
 import { useContent } from '../context/ContentContext';
+import { auth, storage, db, siteId, siteAdminEmail } from '../lib/firebase';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, doc, setDoc, deleteDoc, getDocs, updateDoc, query, orderBy } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { content, updateAllContent } = useContent();
   const [formData, setFormData] = useState(content);
   const [activeTab, setActiveTab] = useState('general');
+  const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [isModerating, setIsModerating] = useState(false);
+  
+  // Timeout logic
+  useEffect(() => {
+    if (!user) return;
+    
+    const timeoutDuration = 30 * 60 * 1000; // 30 minutes
+    let timeoutId: any;
+
+    const resetTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        handleLogout();
+        setNotification({ message: 'Session timed out after 30 minutes', type: 'error' });
+      }, timeoutDuration);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => document.addEventListener(event, resetTimeout));
+    
+    resetTimeout();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => document.removeEventListener(event, resetTimeout));
+    };
+  }, [user]);
+
+  // Fetch all comments for moderation
+  useEffect(() => {
+    if (!user || activeTab !== 'comments') return;
+    
+    setIsModerating(true);
+    const collections = ['posts', 'editorials', 'products', 'trainings', 'services', 'testimonials'];
+    const allComments: any[] = [];
+    
+    // This is a complex fetch because we don't use collectionGroup
+    const fetchComments = async () => {
+      try {
+        for (const colName of collections) {
+          const sitePath = `sites/${siteId}/${colName}`;
+          const colRef = collection(db, sitePath);
+          const docsSnap = await getDocs(colRef);
+          
+          for (const docItem of docsSnap.docs) {
+            const commentsPath = `${sitePath}/${docItem.id}/comments`;
+            const commentsSnap = await getDocs(collection(db, commentsPath));
+            
+            for (const commentDoc of commentsSnap.docs) {
+              const commentData = commentDoc.data();
+              allComments.push({
+                id: commentDoc.id,
+                path: commentsPath,
+                parentTitle: docItem.data().title || docItem.data().name || docItem.id,
+                collection: colName,
+                ...commentData,
+                replies: []
+              });
+              
+              // Fetch replies
+              const repliesPath = `${commentsPath}/${commentDoc.id}/replies`;
+              const repliesSnap = await getDocs(collection(db, repliesPath));
+              repliesSnap.docs.forEach(rdoc => {
+                allComments.push({
+                  id: rdoc.id,
+                  path: repliesPath,
+                  parentTitle: `Reply to: ${commentData.text.substring(0, 20)}...`,
+                  collection: colName,
+                  isReply: true,
+                  ...rdoc.data()
+                });
+              });
+            }
+          }
+        }
+        setComments(allComments.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds));
+      } catch (err) {
+        console.error("Error fetching comments for moderation:", err);
+      } finally {
+        setIsModerating(false);
+      }
+    };
+
+    fetchComments();
+  }, [user, activeTab]);
   
   // New state for list vs edit view
   const [viewState, setViewState] = useState<'list' | 'edit'>('list');
@@ -20,7 +137,16 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   const [confirmDialog, setConfirmDialog] = useState<{isOpen: boolean, type: string, index: number} | null>(null);
 
   useEffect(() => {
-    setFormData(content);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (content) {
+      setFormData(content);
+    }
   }, [content]);
 
   // Clear notifications after 3 seconds
@@ -33,13 +159,65 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
 
   if (!isOpen) return null;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      setNotification(null);
-    } else {
-      setNotification({ message: 'Incorrect password', type: 'error' });
+    if (email !== siteAdminEmail) {
+      setNotification({ message: 'Access denied. Only the site administrator can access this panel.', type: 'error' });
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setNotification({ message: 'Logged in successfully', type: 'success' });
+    } catch (error: any) {
+      setNotification({ message: error.message || 'Login failed', type: 'error' });
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setNotification({ message: 'Please enter your email address first', type: 'error' });
+      return;
+    }
+    setIsResetting(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setNotification({ message: 'Password reset email sent!', type: 'success' });
+    } catch (error: any) {
+      setNotification({ message: error.message || 'Failed to send reset email', type: 'error' });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setNotification({ message: 'Logged out', type: 'success' });
+    } catch (error: any) {
+      setNotification({ message: 'Logout failed', type: 'error' });
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string, isNested: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(field);
+    try {
+      const storageRef = ref(storage, `site/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      
+      if (isNested) {
+        setEditData((prev: any) => ({ ...prev, [field]: url }));
+      } else {
+        setFormData((prev: any) => ({ ...prev, [field]: url }));
+      }
+      setNotification({ message: 'Image uploaded successfully', type: 'success' });
+    } catch (error: any) {
+      setNotification({ message: 'Upload failed: ' + error.message, type: 'error' });
+    } finally {
+      setIsUploading(null);
     }
   };
 
@@ -97,42 +275,63 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     setConfirmDialog({ isOpen: true, type, index });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (confirmDialog) {
       const { type, index } = confirmDialog;
-      const newArray = [...formData[type]];
-      newArray.splice(index, 1);
+      const item = formData[type][index];
+      const sitePath = `sites/${siteId}`;
+      const collectionName = type === 'blogPosts' ? 'posts' : type;
       
-      const newFormData = { ...formData, [type]: newArray };
-      setFormData(newFormData);
-      updateAllContent(newFormData); // Auto-save on delete
-      
-      setConfirmDialog(null);
-      setNotification({ message: 'Item deleted successfully.', type: 'success' });
+      try {
+        await deleteDoc(doc(db, sitePath, collectionName, item.id.toString()));
+        setConfirmDialog(null);
+        setNotification({ message: 'Item deleted successfully.', type: 'success' });
+      } catch (err: any) {
+        setNotification({ message: 'Delete failed: ' + err.message, type: 'error' });
+      }
     }
   };
 
-  const handleSaveItem = (type: string) => {
-    const newArray = [...formData[type]];
-    if (editIndex === -1) {
-      newArray.unshift(editData); // Add to beginning
-    } else if (editIndex !== null) {
-      newArray[editIndex] = editData;
+  const handleSaveItem = async (type: string) => {
+    const sitePath = `sites/${siteId}`;
+    const collectionName = type === 'blogPosts' ? 'posts' : type;
+    const docId = editData.id?.toString() || Date.now().toString();
+    
+    try {
+      await setDoc(doc(db, sitePath, collectionName, docId), editData);
+      setViewState('list');
+      setNotification({ message: 'Item saved successfully.', type: 'success' });
+    } catch (err: any) {
+      setNotification({ message: 'Save failed: ' + err.message, type: 'error' });
     }
-    
-    const newFormData = { ...formData, [type]: newArray };
-    setFormData(newFormData);
-    updateAllContent(newFormData); // Auto-save on edit
-    
-    setViewState('list');
-    setNotification({ message: 'Item saved successfully.', type: 'success' });
+  };
+
+  const handleApproveComment = async (comment: any) => {
+    try {
+      await updateDoc(doc(db, comment.path, comment.id), { status: 'approved' });
+      setComments(prev => prev.map(c => c.id === comment.id ? { ...c, status: 'approved' } : c));
+      setNotification({ message: 'Comment approved', type: 'success' });
+    } catch (err: any) {
+      setNotification({ message: 'Approval failed: ' + err.message, type: 'error' });
+    }
+  };
+
+  const handleDeleteComment = async (comment: any) => {
+    try {
+      await deleteDoc(doc(db, comment.path, comment.id));
+      setComments(prev => prev.filter(c => c.id !== comment.id));
+      setNotification({ message: 'Comment deleted', type: 'success' });
+    } catch (err: any) {
+      setNotification({ message: 'Deletion failed: ' + err.message, type: 'error' });
+    }
   };
 
   const tabs = [
     { id: 'general', label: 'General Info', icon: <LayoutDashboard size={18} /> },
     { id: 'services', label: 'Services', icon: <Server size={18} /> },
     { id: 'testimonials', label: 'Testimonials', icon: <MessageSquare size={18} /> },
-    { id: 'blog', label: 'Blog Posts', icon: <FileText size={18} /> }
+    { id: 'blog', label: 'Blog Posts', icon: <FileText size={18} /> },
+    { id: 'comments', label: 'Moderation', icon: <MessageCircle size={18} /> }
   ];
 
   return (
@@ -152,7 +351,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          {isAuthenticated && (
+          {user && (
             <div className="w-64 bg-slate-50 border-r border-slate-100 p-4 overflow-y-auto shrink-0">
               <nav className="space-y-2">
                 {tabs.map(tab => (
@@ -205,28 +404,214 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
               </div>
             )}
 
-            {!isAuthenticated ? (
-              <form onSubmit={handleLogin} className="max-w-sm mx-auto py-20 px-6">
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Admin Password</label>
-                  <input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none"
-                    placeholder="Enter password (admin123)"
-                  />
+            {!user ? (
+              <div className="max-w-sm mx-auto py-20 px-6">
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Admin Email</label>
+                    <input 
+                      type="email" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none"
+                      placeholder="admin@example.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none pr-12"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" className="w-full bg-brand-blue text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition-colors">
+                    Login
+                  </button>
+                </form>
+                <div className="mt-6 text-center">
+                  <button 
+                    onClick={handleForgotPassword}
+                    disabled={isResetting}
+                    className="text-sm text-brand-blue hover:underline font-medium disabled:opacity-50"
+                  >
+                    {isResetting ? 'Sending...' : 'Forgot Password?'}
+                  </button>
                 </div>
-                <button type="submit" className="w-full bg-brand-blue text-white font-bold py-3 rounded-lg hover:bg-blue-900 transition-colors">
-                  Login
-                </button>
-              </form>
+              </div>
             ) : (
               <div className="p-6 h-full">
+                <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
+                  <div className="text-sm text-slate-500">
+                    Logged in as: <span className="font-bold text-slate-700">{user.email}</span>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
                 
                 {/* GENERAL TAB */}
                 {activeTab === 'general' && (
-                  <div className="space-y-6 max-w-4xl">
+                  <div className="space-y-8 max-w-4xl">
+                    {/* Branding Section */}
+                    <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                      <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <ImageIcon size={20} className="text-brand-green" /> Branding & Media
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Company Logo</label>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input 
+                                type="text"
+                                value={formData.logoUrl || ''}
+                                onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
+                                placeholder="External URL or upload"
+                                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
+                              />
+                              <input 
+                                type="file" 
+                                id="logo-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'logoUrl')}
+                              />
+                              <button 
+                                onClick={() => document.getElementById('logo-upload')?.click()}
+                                disabled={isUploading === 'logoUrl'}
+                                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
+                              >
+                                {isUploading === 'logoUrl' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <Plus size={20} />}
+                              </button>
+                            </div>
+                            {formData.logoUrl && (
+                              <div className="relative w-32 h-12 bg-slate-50 rounded border border-slate-200 p-2 flex items-center justify-center">
+                                <img src={formData.logoUrl} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Hero Background Image</label>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input 
+                                type="text"
+                                value={formData.heroImageUrl || ''}
+                                onChange={(e) => setFormData({...formData, heroImageUrl: e.target.value})}
+                                placeholder="External URL or upload"
+                                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
+                              />
+                              <input 
+                                type="file" 
+                                id="hero-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'heroImageUrl')}
+                              />
+                              <button 
+                                onClick={() => document.getElementById('hero-upload')?.click()}
+                                disabled={isUploading === 'heroImageUrl'}
+                                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
+                              >
+                                {isUploading === 'heroImageUrl' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <Plus size={20} />}
+                              </button>
+                            </div>
+                            {formData.heroImageUrl && (
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
+                                <img src={formData.heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">About Section Image</label>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input 
+                                type="text"
+                                value={formData.aboutImageUrl || ''}
+                                onChange={(e) => setFormData({...formData, aboutImageUrl: e.target.value})}
+                                placeholder="External URL or upload"
+                                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
+                              />
+                              <input 
+                                type="file" 
+                                id="about-image-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'aboutImageUrl')}
+                              />
+                              <button 
+                                onClick={() => document.getElementById('about-image-upload')?.click()}
+                                disabled={isUploading === 'aboutImageUrl'}
+                                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
+                              >
+                                {isUploading === 'aboutImageUrl' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <Plus size={20} />}
+                              </button>
+                            </div>
+                            {formData.aboutImageUrl && (
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
+                                <img src={formData.aboutImageUrl} alt="About preview" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Why Choose Us Image</label>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                              <input 
+                                type="text"
+                                value={formData.whyChooseUsImageUrl || ''}
+                                onChange={(e) => setFormData({...formData, whyChooseUsImageUrl: e.target.value})}
+                                placeholder="External URL or upload"
+                                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
+                              />
+                              <input 
+                                type="file" 
+                                id="why-choose-us-upload" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'whyChooseUsImageUrl')}
+                              />
+                              <button 
+                                onClick={() => document.getElementById('why-choose-us-upload')?.click()}
+                                disabled={isUploading === 'whyChooseUsImageUrl'}
+                                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
+                              >
+                                {isUploading === 'whyChooseUsImageUrl' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <Plus size={20} />}
+                              </button>
+                            </div>
+                            {formData.whyChooseUsImageUrl && (
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
+                                <img src={formData.whyChooseUsImageUrl} alt="Why choose us preview" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">Hero Title (Line 1)</label>
@@ -608,18 +993,15 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 type="file" 
                                 accept="image/*" 
                                 className="hidden" 
-                                id="image-upload" 
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => setEditData({...editData, image: reader.result as string});
-                                    reader.readAsDataURL(file);
-                                  }
-                                }} 
+                                id="blog-image-upload" 
+                                onChange={(e) => handleFileUpload(e, 'image', true)}
                               />
-                              <button onClick={() => document.getElementById('image-upload')?.click()} className="p-2 border border-slate-200 rounded-md bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
-                                <ImageIcon size={20}/>
+                              <button 
+                                onClick={() => document.getElementById('blog-image-upload')?.click()}
+                                disabled={isUploading === 'image'}
+                                className="p-2 border border-slate-200 rounded-md bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                              >
+                                {isUploading === 'image' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <ImageIcon size={20}/>}
                               </button>
                             </div>
                             {editData.image && <img src={editData.image} alt="Cover preview" className="mt-3 w-full h-48 object-cover rounded-md" />}
@@ -713,6 +1095,31 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             />
                           </div>
                         </div>
+
+                        {/* Author Card */}
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Author Info</h3>
+                          <div className="mb-4">
+                            <label className="block text-sm font-bold text-slate-700 mb-1.5">Author Name</label>
+                            <input 
+                              type="text" 
+                              value={editData.author || ''} 
+                              onChange={e => setEditData({...editData, author: e.target.value})} 
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
+                              placeholder="e.g. Shehu Mohammed"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1.5">Designation / Position</label>
+                            <input 
+                              type="text" 
+                              value={editData.authorDesignation || ''} 
+                              onChange={e => setEditData({...editData, authorDesignation: e.target.value})} 
+                              className="w-full px-3 py-2 border border-slate-200 text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
+                              placeholder="e.g. IT Expert"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                     ) : (
@@ -735,9 +1142,94 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             ))}
                           </div>
                         )}
-                        <div className="prose prose-lg max-w-none text-slate-700 whitespace-pre-line">
-                          {editData.content || 'Write your story here...'}
+                        
+                        <div className="flex items-center gap-4 mb-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                          <div className="w-12 h-12 rounded-full bg-brand-blue flex items-center justify-center text-white font-bold text-xl">
+                            {(editData.author || 'A').charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900">{editData.author || 'Admin'}</div>
+                            <div className="text-sm text-slate-500">{editData.authorDesignation || 'Site Administrator'}</div>
+                          </div>
                         </div>
+
+                        <div className="prose prose-lg max-w-none text-slate-700">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {editData.content || 'Write your story here...'}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* MODERATION TAB */}
+                {activeTab === 'comments' && (
+                  <div className="space-y-6 max-w-5xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold text-slate-800">Comment Moderation</h3>
+                      <button 
+                        onClick={() => setActiveTab('comments')} // Refresh
+                        className="text-brand-blue font-bold text-sm hover:underline"
+                      >
+                        Refresh List
+                      </button>
+                    </div>
+
+                    {isModerating ? (
+                      <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-brand-blue mb-4"></div>
+                        <p className="text-slate-500 font-medium">Scanning all collections for comments...</p>
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <div className="text-center py-20 bg-white rounded-2xl border border-slate-100">
+                        <MessageCircle size={48} className="mx-auto text-slate-200 mb-4" />
+                        <p className="text-slate-500 text-lg">No comments found across any collection.</p>
+                      </div>
+                    ) : (
+                      <div className="grid gap-4">
+                        {comments.map((comment) => (
+                          <div key={comment.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                                  {comment.userEmail.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-slate-900">{comment.userEmail}</span>
+                                    {comment.isReply && <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold uppercase">Reply</span>}
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${comment.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                      {comment.status}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-slate-400 mt-0.5">
+                                    On <span className="text-brand-blue font-medium">{comment.parentTitle}</span> ({comment.collection})
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                {comment.status === 'pending' && (
+                                  <button 
+                                    onClick={() => handleApproveComment(comment)}
+                                    className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-bold"
+                                  >
+                                    <CheckCircle size={18} /> Approve
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteComment(comment)}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-bold"
+                                >
+                                  <Trash2 size={18} /> Delete
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-100 italic">
+                              "{comment.text}"
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -748,7 +1240,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
         </div>
 
         {/* Global Modal Footer (hidden in edit views) */}
-        {isAuthenticated && viewState === 'list' && (
+        {user && viewState === 'list' && (
           <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end shrink-0">
             <button onClick={handleSave} className="bg-brand-green hover:bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2 shadow-sm">
               <Save size={20} /> Save All Changes

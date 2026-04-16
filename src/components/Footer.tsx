@@ -65,7 +65,7 @@ const Footer = () => {
           <div>
             <h3 className="text-white font-bold text-lg mb-6">Our Services</h3>
             <ul className="space-y-3">
-              {content.services?.slice(0, 6).map((service: any, index: number) => (
+              {content.services?.map((service: any, index: number) => (
                 <li key={index} className="hover:text-brand-green transition-colors cursor-pointer">{service.title}</li>
               ))}
             </ul>

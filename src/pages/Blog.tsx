@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, User, ArrowRight, Tag, Clock } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
+import { Link } from 'react-router-dom';
 
 const Blog = () => {
   const { content } = useContent();
@@ -35,14 +36,16 @@ const Blog = () => {
                 <div className="w-8 h-1 bg-brand-green rounded-full"></div>
                 <h2 className="text-2xl font-bold text-slate-800 uppercase tracking-wider">Featured Article</h2>
               </div>
-              <article className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row group cursor-pointer border border-slate-100">
+              <article className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col lg:flex-row group border border-slate-100">
                 <div className="lg:w-1/2 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-brand-blue/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
-                  <img 
-                    src={featuredPost.image} 
-                    alt={featuredPost.title} 
-                    className="w-full h-full object-cover min-h-[400px] group-hover:scale-105 transition-transform duration-700"
-                  />
+                  <Link to={`/blog/${featuredPost.slug || featuredPost.id}`}>
+                    <div className="absolute inset-0 bg-brand-blue/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
+                    <img 
+                      src={featuredPost.image} 
+                      alt={featuredPost.title} 
+                      className="w-full h-full object-cover min-h-[400px] group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </Link>
                   <div className="absolute top-6 left-6 z-20">
                     <span className="bg-brand-green text-white text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wider shadow-lg">
                       {featuredPost.category}
@@ -54,16 +57,18 @@ const Blog = () => {
                     <span className="flex items-center gap-2"><Calendar size={16} className="text-brand-blue" /> {featuredPost.date}</span>
                     <span className="flex items-center gap-2"><User size={16} className="text-brand-blue" /> {featuredPost.author}</span>
                   </div>
-                  <h3 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6 leading-tight group-hover:text-brand-blue transition-colors">
-                    {featuredPost.title}
-                  </h3>
+                  <Link to={`/blog/${featuredPost.slug || featuredPost.id}`}>
+                    <h3 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6 leading-tight group-hover:text-brand-blue transition-colors">
+                      {featuredPost.title}
+                    </h3>
+                  </Link>
                   <p className="text-slate-600 mb-8 text-lg leading-relaxed">
                     {featuredPost.excerpt}
                   </p>
                   <div className="mt-auto">
-                    <a href="#" className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-medium hover:bg-brand-blue transition-colors group-hover:gap-4">
+                    <Link to={`/blog/${featuredPost.slug || featuredPost.id}`} className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-full font-medium hover:bg-brand-blue transition-colors group-hover:gap-4">
                       Read Article <ArrowRight size={18} />
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </article>
@@ -85,11 +90,13 @@ const Blog = () => {
               {regularPosts.map((post: any) => (
                 <article key={post.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-slate-100 hover:-translate-y-1">
                   <div className="relative overflow-hidden h-60">
-                    <img 
-                      src={post.image} 
-                      alt={post.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
+                    <Link to={`/blog/${post.slug || post.id}`}>
+                      <img 
+                        src={post.image} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                    </Link>
                     <div className="absolute top-4 left-4">
                       <span className="bg-white/90 backdrop-blur-sm text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                         {post.category}
@@ -101,22 +108,27 @@ const Blog = () => {
                       <span className="flex items-center gap-1.5"><Calendar size={14} /> {post.date.split(',')[0]}</span>
                       <span className="flex items-center gap-1.5"><Clock size={14} /> 5 min read</span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-brand-blue transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
+                    <Link to={`/blog/${post.slug || post.id}`}>
+                      <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-brand-blue transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                    </Link>
                     <p className="text-slate-600 mb-6 line-clamp-3 text-sm leading-relaxed flex-grow">
                       {post.excerpt}
                     </p>
                     <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-auto">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-xs">
-                          {post.author.charAt(0)}
+                        <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-bold text-sm">
+                          {(post.author || 'A').charAt(0)}
                         </div>
-                        <span className="text-sm font-medium text-slate-700">{post.author}</span>
+                        <div>
+                          <div className="text-sm font-bold text-slate-900">{post.author || 'Admin'}</div>
+                          <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">{post.authorDesignation || 'IT Expert'}</div>
+                        </div>
                       </div>
-                      <a href="#" className="text-brand-blue font-bold hover:text-brand-green transition-colors p-2 rounded-full hover:bg-slate-50">
+                      <Link to={`/blog/${post.slug || post.id}`} className="text-brand-blue font-bold hover:text-brand-green transition-colors p-2 rounded-full hover:bg-slate-50">
                         <ArrowRight size={20} />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </article>

@@ -16,7 +16,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 const Home = () => {
   const { content } = useContent();
-  const services = content.services?.slice(0, 4) || [];
+  const services = content.services || [];
 
   return (
     <div className="w-full">
@@ -25,7 +25,7 @@ const Home = () => {
         {/* Background Image Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
+            src={content?.heroImageUrl || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"} 
             alt="Global IT Connectivity and Infrastructure" 
             className="w-full h-full object-cover opacity-100"
           />
@@ -70,7 +70,7 @@ const Home = () => {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+                src={content?.aboutImageUrl || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
                 alt="Network Infrastructure Analysis" 
                 className="rounded-2xl shadow-2xl"
               />
@@ -182,7 +182,7 @@ const Home = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-brand-green rounded-2xl opacity-20 blur-lg"></div>
               <img 
-                src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+                src={content?.whyChooseUsImageUrl || "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
                 alt="Secure Digital Infrastructure" 
                 className="rounded-2xl shadow-2xl relative z-10 border-4 border-white/10"
               />

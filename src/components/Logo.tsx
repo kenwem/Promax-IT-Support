@@ -1,4 +1,5 @@
 import React from 'react';
+import { useContent } from '../context/ContentContext';
 
 interface LogoProps {
   className?: string;
@@ -7,6 +8,7 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ className = '', showSlogan = false, darkText = true }) => {
+  const { content } = useContent();
   const textColor = darkText ? '#0f2756' : '#ffffff';
   const greenColor = '#0f9648';
   const darkBlueColor = '#0f2756';
@@ -14,23 +16,27 @@ const Logo: React.FC<LogoProps> = ({ className = '', showSlogan = false, darkTex
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div className="flex items-center gap-3">
-        {/* Shield Icon */}
-        <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-          {/* Dark Blue Shield Part */}
-          <path d="M10 20 C 30 15, 70 15, 90 20 C 90 20, 85 45, 70 60 C 50 75, 10 50, 10 20 Z" fill={darkBlueColor} />
-          {/* Green Shield Part */}
-          <path d="M10 50 C 15 65, 50 90, 50 90 C 50 90, 85 70, 90 45 C 90 45, 85 55, 70 60 C 50 75, 10 50, 10 50 Z" fill={greenColor} />
-          
-          {/* Circuit Board Lines */}
-          <path d="M 15 40 L 35 40 L 45 30" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="45" cy="30" r="3" fill="white" />
-          
-          <path d="M 20 50 L 30 50 L 45 40 L 55 40" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="55" cy="40" r="3" fill="white" />
-          
-          <path d="M 25 60 L 35 50 L 45 50" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="45" cy="50" r="3" fill="white" />
-        </svg>
+        {content?.logoUrl ? (
+          <img src={content.logoUrl} alt="Logo" className="w-12 h-12 object-contain shrink-0" />
+        ) : (
+          /* Shield Icon */
+          <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+            {/* Dark Blue Shield Part */}
+            <path d="M10 20 C 30 15, 70 15, 90 20 C 90 20, 85 45, 70 60 C 50 75, 10 50, 10 20 Z" fill={darkBlueColor} />
+            {/* Green Shield Part */}
+            <path d="M10 50 C 15 65, 50 90, 50 90 C 50 90, 85 70, 90 45 C 90 45, 85 55, 70 60 C 50 75, 10 50, 10 50 Z" fill={greenColor} />
+            
+            {/* Circuit Board Lines */}
+            <path d="M 15 40 L 35 40 L 45 30" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="45" cy="30" r="3" fill="white" />
+            
+            <path d="M 20 50 L 30 50 L 45 40 L 55 40" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="55" cy="40" r="3" fill="white" />
+            
+            <path d="M 25 60 L 35 50 L 45 50" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="45" cy="50" r="3" fill="white" />
+          </svg>
+        )}
 
         {/* Text Part */}
         <div className="flex flex-col">

@@ -1,4 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+import { db, siteId } from '../lib/firebase';
 
 const defaultContent = {
   heroTitle1: "Ready to Help —",
@@ -12,168 +14,158 @@ const defaultContent = {
   slogan: "Ready to Help — Anytime IT Matters.",
   yearEstablished: "January 2025",
   copyrightYear: "2026",
+  logoUrl: "",
+  heroImageUrl: "",
+  aboutImageUrl: "",
+  whyChooseUsImageUrl: "",
   services: [
     {
-      id: "network",
+      id: "service-1",
       iconName: "Network",
       title: "Network Design & Administration",
-      desc: "Robust LAN/WAN setup, optimization, and monitoring for seamless connectivity.",
-      features: [
-        "LAN, WAN, WLAN setup",
-        "Router & switch configuration",
-        "Structured cabling",
-        "Network optimization",
-        "VPN setup and remote access",
-        "Network monitoring"
-      ]
+      desc: "Design and implementation of robust, scalable network solutions.",
+      features: ["LAN/WAN Setup", "VPN Configuration", "Wireless Solutions", "Network Security"]
     },
     {
-      id: "server",
+      id: "service-2",
       iconName: "Server",
       title: "Server & Infrastructure Management",
-      desc: "Expert deployment and maintenance of Windows/Linux servers and infrastructure.",
-      features: [
-        "Windows & Linux server deployment",
-        "Active Directory configuration",
-        "Virtualization",
-        "Backup & disaster recovery",
-        "Infrastructure monitoring"
-      ]
+      desc: "Comprehensive management of your server and IT infrastructure.",
+      features: ["Server Setup", "Virtualization", "Storage Solutions", "Infrastructure Monitoring"]
     },
     {
-      id: "mail",
+      id: "service-3",
       iconName: "Mail",
       title: "Mail & DNS Solutions",
-      desc: "Secure business email setup and comprehensive domain management.",
-      features: [
-        "Business email setup (Microsoft 365 & others)",
-        "DNS configuration",
-        "Domain management",
-        "SPF, DKIM, DMARC configuration",
-        "Email security hardening"
-      ]
+      desc: "Professional email hosting and DNS management services.",
+      features: ["Email Hosting", "DNS Configuration", "Spam Protection", "Mail Migration"]
     },
     {
-      id: "security",
+      id: "service-4",
       iconName: "Shield",
       title: "Cybersecurity Solutions",
-      desc: "Comprehensive protection with firewalls, endpoint security, and policy implementation.",
-      features: [
-        "Firewall configuration",
-        "Endpoint protection",
-        "Vulnerability checks",
-        "Security policy implementation",
-        "User awareness training"
-      ]
+      desc: "Protecting your digital assets with advanced security protocols.",
+      features: ["Threat Detection", "Firewall Management", "Data Encryption", "Security Audits"]
     },
     {
-      id: "support",
+      id: "service-5",
       iconName: "Headphones",
       title: "IT Support & Helpdesk",
-      desc: "Responsive remote and on-site helpdesk support to keep your team productive.",
-      features: [
-        "Remote & on-site support",
-        "Hardware troubleshooting",
-        "Software maintenance",
-        "System upgrades",
-        "Performance optimization"
-      ]
+      desc: "24/7 proactive monitoring and technical assistance.",
+      features: ["Remote Support", "On-site Assistance", "Help Desk Services", "System Maintenance"]
     },
     {
-      id: "consultancy",
+      id: "service-6",
       iconName: "Lightbulb",
       title: "IT Consultancy & Advisory",
-      desc: "Strategic technology partnerships that help your business grow.",
-      features: [
-        "IT infrastructure planning",
-        "Technology audits",
-        "Cost optimization",
-        "IT policy development",
-        "Digital transformation"
-      ]
+      desc: "Strategic IT consulting to align technology with your business goals.",
+      features: ["IT Strategy", "Digital Transformation", "Compliance", "Project Management"]
     },
     {
-      id: "training",
+      id: "service-7",
       iconName: "GraduationCap",
       title: "IT Training & Capacity Building",
-      desc: "Empower your staff with essential IT and cybersecurity skills.",
-      features: [
-        "Networking training",
-        "Cybersecurity awareness",
-        "DNS & email best practices",
-        "Corporate IT training"
-      ]
+      desc: "Empowering your team with the latest technical skills.",
+      features: ["Staff Training", "Workshops", "Certification Prep", "Tech Literacy"]
     }
   ],
-  testimonials: [
-    {
-      id: 1,
-      name: "Emmanuel Okonkwo",
-      role: "CEO, TechStart Nigeria",
-      content: "ProMax IT Support transformed our network infrastructure. We used to have constant downtime, but since they took over, our operations have been seamless. Highly recommended!",
-      rating: 5
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      role: "Operations Manager, Logistics Plus",
-      content: "The cybersecurity training they provided for our staff was eye-opening. We feel much more secure knowing ProMax is monitoring our systems 24/7.",
-      rating: 5
-    },
-    {
-      id: 3,
-      name: "Tunde Bakare",
-      role: "Director, Bakare Associates",
-      content: "Fast, professional, and affordable. They bridge the gap perfectly for small businesses like ours that need enterprise-grade support without the massive cost.",
-      rating: 5
-    },
-    {
-      id: 4,
-      name: "Chidinma Adebayo",
-      role: "Founder, Creative Hub",
-      content: "Their response time is incredible. Whenever we have an issue, they are on it within minutes. It feels like having an in-house IT team.",
-      rating: 4
-    }
-  ],
+  testimonials: [],
   blogPosts: []
 };
 
 export const ContentContext = createContext<any>(null);
 
 export const ContentProvider = ({ children }: { children: React.ReactNode }) => {
-  const [content, setContent] = useState(() => {
-    const saved = localStorage.getItem('promax_content');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Merge missing fields like copyrightYear
-      const merged = { ...defaultContent, ...parsed };
-      
-      // Force update address if it's the old default
-      if (parsed.address === "221 Ijesha Road, Surulere, Lagos, Nigeria") {
-        merged.address = defaultContent.address;
-      }
-
-      // Fix the "Since Since" issue by stripping "Since " from the saved yearEstablished
-      if (typeof merged.yearEstablished === 'string' && merged.yearEstablished.toLowerCase().startsWith('since ')) {
-        merged.yearEstablished = merged.yearEstablished.substring(6).trim();
-      }
-      
-      return merged;
-    }
-    return defaultContent;
-  });
+  const [content, setContent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('promax_content', JSON.stringify(content));
-  }, [content]);
+    const sitePath = `sites/${siteId}`;
+    const settingsDoc = doc(db, sitePath, 'settings', 'site');
+    const servicesCol = collection(db, sitePath, 'services');
+    const testimonialsCol = collection(db, sitePath, 'testimonials');
+    const postsCol = collection(db, sitePath, 'posts');
 
-  const updateContent = (key: string, value: any) => {
-    setContent((prev: any) => ({ ...prev, [key]: value }));
+    const unsubSettings = onSnapshot(settingsDoc, (snapshot) => {
+      const data = snapshot.exists() ? snapshot.data() : {};
+      setContent((prev: any) => ({
+        ...(prev || defaultContent),
+        ...data,
+        // Ensure arrays are initialized if not present in data
+        services: prev?.services || [],
+        testimonials: prev?.testimonials || [],
+        blogPosts: prev?.blogPosts || []
+      }));
+      
+      if (!snapshot.exists()) {
+        setDoc(settingsDoc, defaultContent).catch(err => console.error("Error creating initial settings:", err));
+      }
+      setLoading(false);
+    });
+
+    const unsubServices = onSnapshot(servicesCol, (snapshot) => {
+      const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (services.length > 0) {
+        setContent((prev: any) => ({ ...prev, services }));
+      } else {
+        // If collection is empty, use defaults from defaultContent
+        setContent((prev: any) => ({ ...prev, services: defaultContent.services }));
+      }
+    });
+
+    const unsubTestimonials = onSnapshot(testimonialsCol, (snapshot) => {
+      const testimonials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (testimonials.length > 0) {
+        setContent((prev: any) => ({ ...prev, testimonials }));
+      } else {
+        setContent((prev: any) => ({ ...prev, testimonials: defaultContent.testimonials }));
+      }
+    });
+
+    const unsubPosts = onSnapshot(postsCol, (snapshot) => {
+      const blogPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (blogPosts.length > 0) {
+        setContent((prev: any) => ({ ...prev, blogPosts }));
+      } else {
+        setContent((prev: any) => ({ ...prev, blogPosts: defaultContent.blogPosts }));
+      }
+    });
+
+    return () => {
+      unsubSettings();
+      unsubServices();
+      unsubTestimonials();
+      unsubPosts();
+    };
+  }, []);
+
+  const updateContent = async (key: string, value: any) => {
+    const sitePath = `sites/${siteId}`;
+    try {
+      await setDoc(doc(db, sitePath, 'settings', 'site'), { [key]: value }, { merge: true });
+    } catch (err) {
+      console.error("Error updating content:", err);
+    }
   };
 
-  const updateAllContent = (newContent: any) => {
-    setContent(newContent);
+  const updateAllContent = async (newContent: any) => {
+    const sitePath = `sites/${siteId}`;
+    const { services, testimonials, blogPosts, ...settings } = newContent;
+    try {
+      await setDoc(doc(db, sitePath, 'settings', 'site'), settings, { merge: true });
+      // Note: Updating collections is usually done individually in the admin panel
+    } catch (err) {
+      console.error("Error updating all content:", err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
+      </div>
+    );
+  }
 
   return (
     <ContentContext.Provider value={{ content, updateContent, updateAllContent }}>
@@ -183,3 +175,4 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
 };
 
 export const useContent = () => useContext(ContentContext);
+

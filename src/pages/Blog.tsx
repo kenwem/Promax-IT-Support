@@ -1,20 +1,36 @@
 import React from 'react';
-import { Calendar, User, ArrowRight, Tag, Clock } from 'lucide-react';
+import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { formatImageUrl } from '../utils/imageUtils';
+
+function safeFormatDate(date: any): string {
+  if (!date) return 'Recently';
+  if (typeof date === 'string') {
+    return date.split(',')[0].trim();
+  }
+  if (typeof date === 'object' && date && 'seconds' in date) {
+    return new Date(date.seconds * 1000).toLocaleDateString('en-GB');
+  }
+  return String(date);
+}
 
 const Blog = () => {
   const { content } = useContent();
-  const posts = content.blogPosts || [];
+  const posts = content?.blogPosts || [];
 
   // Separate featured post (first one marked featured, or just the first post)
   const featuredPost = posts.find((p: any) => p.featured) || posts[0];
   const regularPosts = posts.filter((p: any) => p.id !== featuredPost?.id);
 
-  const categories = ["Security", "Networking", "Cloud", "Business", "Tech Tips", "News"];
-
   return (
     <div className="w-full pt-20 bg-slate-50 min-h-screen">
+      <Helmet>
+        <title>Insights & IT Knowledge Base | ProMax IT Support Limited</title>
+        <meta name="description" content="Discover actionable technology trends, IT infrastructure strategies, and cybersecurity best practices from ProMax IT Support Limited." />
+      </Helmet>
+
       {/* Header */}
       <section className="bg-brand-blue text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
@@ -41,21 +57,21 @@ const Blog = () => {
                   <Link to={`/blog/${featuredPost.slug || featuredPost.id}`}>
                     <div className="absolute inset-0 bg-brand-blue/20 group-hover:bg-transparent transition-colors duration-500 z-10"></div>
                     <img 
-                      src={featuredPost.image} 
+                      src={formatImageUrl(featuredPost.image) || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"} 
                       alt={featuredPost.title} 
                       className="w-full h-full object-cover min-h-[400px] group-hover:scale-105 transition-transform duration-700"
                     />
                   </Link>
                   <div className="absolute top-6 left-6 z-20">
                     <span className="bg-brand-green text-white text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wider shadow-lg">
-                      {featuredPost.category}
+                      {featuredPost.category || 'Technology'}
                     </span>
                   </div>
                 </div>
                 <div className="lg:w-1/2 p-10 lg:p-16 flex flex-col justify-center">
                   <div className="flex items-center gap-6 text-sm text-slate-500 mb-6 font-medium">
-                    <span className="flex items-center gap-2"><Calendar size={16} className="text-brand-blue" /> {featuredPost.date}</span>
-                    <span className="flex items-center gap-2"><User size={16} className="text-brand-blue" /> {featuredPost.author}</span>
+                    <span className="flex items-center gap-2"><Calendar size={16} className="text-brand-blue" /> {safeFormatDate(featuredPost.date)}</span>
+                    <span className="flex items-center gap-2"><User size={16} className="text-brand-blue" /> {featuredPost.author || 'Admin'}</span>
                   </div>
                   <Link to={`/blog/${featuredPost.slug || featuredPost.id}`}>
                     <h3 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6 leading-tight group-hover:text-brand-blue transition-colors">
@@ -88,24 +104,24 @@ const Blog = () => {
             /* Grid of Posts */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {regularPosts.map((post: any) => (
-                <article key={post.id} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-slate-100 hover:-translate-y-1">
+                <article key={post.id || post.slug} className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group border border-slate-100 hover:-translate-y-1">
                   <div className="relative overflow-hidden h-60">
                     <Link to={`/blog/${post.slug || post.id}`}>
                       <img 
-                        src={post.image} 
+                        src={formatImageUrl(post.image) || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"} 
                         alt={post.title} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                     </Link>
                     <div className="absolute top-4 left-4">
                       <span className="bg-white/90 backdrop-blur-sm text-brand-blue text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                        {post.category}
+                        {post.category || 'Insights'}
                       </span>
                     </div>
                   </div>
                   <div className="p-8 flex flex-col flex-grow">
                     <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 font-medium">
-                      <span className="flex items-center gap-1.5"><Calendar size={14} /> {post.date.split(',')[0]}</span>
+                      <span className="flex items-center gap-1.5"><Calendar size={14} /> {safeFormatDate(post.date)}</span>
                       <span className="flex items-center gap-1.5"><Clock size={14} /> 5 min read</span>
                     </div>
                     <Link to={`/blog/${post.slug || post.id}`}>

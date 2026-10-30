@@ -67,16 +67,131 @@ const defaultContent = {
       title: "IT Training & Capacity Building",
       desc: "Empowering your team with the latest technical skills.",
       features: ["Staff Training", "Workshops", "Certification Prep", "Tech Literacy"]
+    },
+    {
+      id: "service-8",
+      iconName: "Code",
+      title: "Web Development",
+      desc: "Custom web development, responsive applications, and high-performance digital platforms.",
+      features: [
+        "Custom Web Applications",
+        "Responsive & Mobile-First Design",
+        "E-Commerce & Portals",
+        "CMS Solutions & Maintenance",
+        "API Integration & Performance Optimization"
+      ]
     }
   ],
-  testimonials: [],
-  blogPosts: []
+  testimonials: [
+    {
+      id: "testimonial-1",
+      name: "Tunde Adebayo",
+      role: "Operations Director, Apex Logistics",
+      content: "ProMax transformed our office network and server reliability. We experienced zero downtime during our peak shipping quarter.",
+      rating: 5
+    },
+    {
+      id: "testimonial-2",
+      name: "Chidinma Okonkwo",
+      role: "Managing Partner, Prime Legal Associates",
+      content: "Their cybersecurity implementation and rapid IT helpdesk support gave our firm peace of mind with sensitive client data.",
+      rating: 5
+    }
+  ],
+  blogPosts: [
+    {
+      id: "post-1",
+      title: "How Technology Helps Small Businesses Grow",
+      slug: "how-technology-helps-small-businesses-grow",
+      category: "Business & Growth",
+      author: "Shehu Mohammed",
+      authorDesignation: "IT Expert",
+      date: "29/10/2026",
+      featured: true,
+      image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
+      excerpt: "In today's fast-paced digital world, leveraging modern IT infrastructure and cloud solutions enables small businesses to scale efficiently, enhance security, and outpace the competition.",
+      content: `# How Technology Helps Small Businesses Grow
+
+In the modern enterprise landscape, technology is no longer a luxury reserved for multinational conglomerates. For small and medium-sized enterprises (SMEs), implementing robust, secure, and agile IT solutions is the single most decisive factor in scaling operations and outperforming legacy competitors.
+
+---
+
+## 1. Streamlined Operations & High Availability
+
+Downtime translates directly into lost revenue and diminished customer trust. With modern **server infrastructure management** and high-availability cloud networking, small businesses can achieve enterprise-grade uptime of 99.9%.
+
+| Capability | Legacy Approach | Modern IT Support |
+| :--- | :--- | :--- |
+| **Data Backup** | Manual USB drives | Automated Cloud Replication |
+| **System Monitoring** | Reactive (after a crash) | Proactive 24/7 Health Telemetry |
+| **Network Security** | Basic commercial routers | Managed UTM Firewalls & VPNs |
+| **Helpdesk** | Ad-hoc internal troubleshooting | Dedicated SLA-backed IT Helpdesk |
+
+---
+
+## 2. Fortified Cybersecurity & Data Protection
+
+Cyber threats are increasingly targeting smaller businesses because they often lack enterprise security measures. A comprehensive defense strategy includes:
+
+- **End-to-End Encryption**: Securing all internal communications and sensitive customer data.
+- **Multi-Factor Authentication (MFA)**: Eliminating credential-stuffing vulnerability across all email and domain accounts.
+- **Managed DNS & Anti-Phishing Filters**: Blocking malicious traffic before it ever hits employee workstations.
+
+> *"Investing in preventative IT support is exponentially more cost-effective than remediating a single security incident or unrecoverable data loss."*
+
+---
+
+## 3. Remote Work & Scalable Cloud Collaboration
+
+Transitioning to secure mail servers, centralized active directories, and private VPN infrastructure empowers your team to collaborate seamlessly from any location without compromising corporate governance.
+
+---
+
+### Ready to Accelerate Your Business Growth?
+
+At **ProMax IT Support Limited**, we provide customized network design, proactive infrastructure monitoring, and tailored IT consulting to ensure your technology accelerates your ambitions.
+
+[Explore Our IT Services](/services) • [Request a Consultation](/contact)`
+    },
+    {
+      id: "post-2",
+      title: "Top 5 Cybersecurity Best Practices for Modern Businesses",
+      slug: "top-5-cybersecurity-best-practices",
+      category: "Cybersecurity",
+      author: "Shehu Mohammed",
+      authorDesignation: "IT Expert",
+      date: "28/10/2026",
+      featured: false,
+      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
+      excerpt: "Protect your corporate networks and client data with essential cyber hygiene protocols, zero-trust network access, and proactive threat detection.",
+      content: `# Top 5 Cybersecurity Best Practices for Modern Businesses
+
+Cybersecurity threats have evolved dramatically. Today, threat actors deploy sophisticated automated scanners targeting known vulnerabilities in network perimeters, email relays, and unpatched endpoints.
+
+## 1. Enforce Zero Trust Network Access (ZTNA)
+Never trust any connection implicitly, even if it originates from within the local office network. Require authentication, device compliance verification, and least-privilege permissions.
+
+## 2. Patching and Lifecycle Management
+Over 60% of data breaches involve unpatched software vulnerabilities where a vendor fix was already available. Establish monthly recurring patch cadences for firewalls, operating systems, and network controllers.
+
+## 3. Advanced Email Filtering & DMARC Enforcements
+Phishing accounts for over 80% of initial network intrusions. Implementing SPF, DKIM, and strict DMARC policies ensures spoofed emails cannot impersonate your executive leadership or domain.
+
+## 4. Immutable Backups
+Maintain isolated, write-once-read-many (WORM) backups of all core databases and virtual machine snapshots to neutralize ransomware threats.
+
+## 5. Employee Awareness & Simulation
+Conduct regular simulated phishing drills to transform your workforce into the primary line of defense.
+
+[Contact Our Security Team](/contact)`
+    }
+  ]
 };
 
 export const ContentContext = createContext<any>(null);
 
 export const ContentProvider = ({ children }: { children: React.ReactNode }) => {
-  const [content, setContent] = useState<any>(null);
+  const [content, setContent] = useState<any>(defaultContent);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,10 +206,9 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
       setContent((prev: any) => ({
         ...(prev || defaultContent),
         ...data,
-        // Ensure arrays are initialized if not present in data
-        services: prev?.services || [],
-        testimonials: prev?.testimonials || [],
-        blogPosts: prev?.blogPosts || []
+        services: prev?.services?.length ? prev.services : defaultContent.services,
+        testimonials: prev?.testimonials?.length ? prev.testimonials : defaultContent.testimonials,
+        blogPosts: prev?.blogPosts?.length ? prev.blogPosts : defaultContent.blogPosts
       }));
       
       if (!snapshot.exists()) {
@@ -104,11 +218,21 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
     });
 
     const unsubServices = onSnapshot(servicesCol, (snapshot) => {
-      const services = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (services.length > 0) {
-        setContent((prev: any) => ({ ...prev, services }));
+      const remoteServices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (remoteServices.length > 0) {
+        // Ensure all default services (including Web Development) are present if not already added to Firestore
+        const mergedServices = [...remoteServices];
+        defaultContent.services.forEach(defService => {
+          const exists = remoteServices.some((s: any) => 
+            s.id === defService.id || 
+            (s.title && s.title.toLowerCase().trim() === defService.title.toLowerCase().trim())
+          );
+          if (!exists) {
+            mergedServices.push(defService);
+          }
+        });
+        setContent((prev: any) => ({ ...prev, services: mergedServices }));
       } else {
-        // If collection is empty, use defaults from defaultContent
         setContent((prev: any) => ({ ...prev, services: defaultContent.services }));
       }
     });

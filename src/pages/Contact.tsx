@@ -8,6 +8,15 @@ const Contact = () => {
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [selectedService, setSelectedService] = useState('');
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const serviceParam = queryParams.get('service');
+    if (serviceParam) {
+      setSelectedService(decodeURIComponent(serviceParam));
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (location.hash === '#contact-form') {
@@ -134,6 +143,22 @@ const Contact = () => {
                       placeholder="Your Company Ltd"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Service Required / Inquiry Type</label>
+                  <select
+                    name="service"
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all disabled:opacity-60 bg-white text-slate-800"
+                  >
+                    <option value="">-- Select a Service (Optional) --</option>
+                    {content.services?.map((s: any) => (
+                      <option key={s.id || s.title} value={s.title}>{s.title}</option>
+                    ))}
+                    <option value="General Inquiry">General IT Inquiry</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>

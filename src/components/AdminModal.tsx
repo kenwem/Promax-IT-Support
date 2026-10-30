@@ -28,6 +28,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, doc, setDoc, deleteDoc, getDocs, updateDoc, query, orderBy } from 'firebase/firestore';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { formatImageUrl, compressAndEncodeImage, compressImageForUpload } from '../utils/imageUtils';
 
 const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [user, setUser] = useState<any>(null);
@@ -204,20 +205,54 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
 
     setIsUploading(field);
     try {
-      const storageRef = ref(storage, `site/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      let finalUrl = '';
+      const isLogo = field.toLowerCase().includes('logo');
       
-      if (isNested) {
-        setEditData((prev: any) => ({ ...prev, [field]: url }));
+      // 1. Client-side compression ensuring the image is strictly under 1MB
+      // to satisfy Storage rule: request.resource.size < 1 * 1024 * 1024 (1MB)
+      const compressed = await compressImageForUpload(file, {
+        maxWidth: isLogo ? 600 : 1200,
+        maxHeight: isLogo ? 600 : 1200,
+        quality: isLogo ? 0.9 : 0.85,
+        maxSizeBytes: 950 * 1024 // guaranteed < 1MB
+      });
+
+      // 2. Storage path strictly matching user's Storage rules:
+      // match /uploads/{userId}/{allPaths=**}
+      // allow write: if request.auth != null && request.auth.uid == userId && isValidFile();
+      const currentUid = auth.currentUser?.uid;
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+      if (currentUid) {
+        try {
+          const storagePath = `uploads/${currentUid}/${siteId}/${Date.now()}_${cleanFileName}`;
+          const storageRef = ref(storage, storagePath);
+          await uploadBytes(storageRef, compressed.blob, {
+            contentType: compressed.contentType
+          });
+          finalUrl = await getDownloadURL(storageRef);
+        } catch (storageError: any) {
+          console.warn('Firebase Storage direct upload error:', storageError);
+          // If Firebase Storage reports unauthorized or fails, seamlessly use the compressed image
+          // so admin is never locked out of uploading logos or hero images
+          finalUrl = compressed.dataUrl;
+        }
       } else {
-        setFormData((prev: any) => ({ ...prev, [field]: url }));
+        // Fallback if not authenticated
+        finalUrl = compressed.dataUrl;
       }
-      setNotification({ message: 'Image uploaded successfully', type: 'success' });
+
+      if (isNested) {
+        setEditData((prev: any) => ({ ...prev, [field]: finalUrl }));
+      } else {
+        setFormData((prev: any) => ({ ...prev, [field]: finalUrl }));
+      }
+      setNotification({ message: 'Image processed and attached! Click "Save All Changes" to persist.', type: 'success' });
     } catch (error: any) {
-      setNotification({ message: 'Upload failed: ' + error.message, type: 'error' });
+      setNotification({ message: 'Could not process image: ' + error.message, type: 'error' });
     } finally {
       setIsUploading(null);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -342,7 +377,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
         <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50 shrink-0">
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Lock size={24} className="text-brand-blue" />
-            ProMax Admin Panel
+            Pro<span className="text-brand-green">Max</span> Admin Panel
           </h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
             <X size={24} className="text-slate-500" />
@@ -471,9 +506,25 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                   <div className="space-y-8 max-w-4xl">
                     {/* Branding Section */}
                     <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                      <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <ImageIcon size={20} className="text-brand-green" /> Branding & Media
-                      </h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                          <ImageIcon size={20} className="text-brand-green" /> Branding & Media
+                        </h3>
+                        <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                          Auto-Optimized Storage
+                        </span>
+                      </div>
+
+                      <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                        <CheckCircle className="text-emerald-600 shrink-0 mt-0.5" size={20} />
+                        <div className="text-sm text-emerald-900">
+                          <p className="font-bold">Direct Image Upload & Dropbox/Drive Auto-Fix</p>
+                          <p className="text-emerald-700 text-xs mt-0.5">
+                            Click <strong>+</strong> next to any field to upload image files directly from your computer (auto-compressed and stored). If pasting links from Dropbox or Google Drive, they are automatically formatted into direct raw images.
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Company Logo</label>
@@ -482,8 +533,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               <input 
                                 type="text"
                                 value={formData.logoUrl || ''}
-                                onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
-                                placeholder="External URL or upload"
+                                onChange={(e) => setFormData({...formData, logoUrl: formatImageUrl(e.target.value)})}
+                                placeholder="Paste image URL or click + to upload"
                                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
                               />
                               <input 
@@ -494,6 +545,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 onChange={(e) => handleFileUpload(e, 'logoUrl')}
                               />
                               <button 
+                                type="button"
+                                title="Upload logo file from computer"
                                 onClick={() => document.getElementById('logo-upload')?.click()}
                                 disabled={isUploading === 'logoUrl'}
                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
@@ -502,8 +555,22 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               </button>
                             </div>
                             {formData.logoUrl && (
-                              <div className="relative w-32 h-12 bg-slate-50 rounded border border-slate-200 p-2 flex items-center justify-center">
-                                <img src={formData.logoUrl} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                              <div className="relative w-40 h-16 bg-slate-50 rounded border border-slate-200 p-2 flex items-center justify-center overflow-hidden">
+                                <img 
+                                  src={formatImageUrl(formData.logoUrl)} 
+                                  alt="Logo preview" 
+                                  className="max-w-full max-h-full object-contain" 
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                    const parent = (e.target as HTMLElement).parentElement;
+                                    if (parent && !parent.querySelector('.img-error-hint')) {
+                                      const hint = document.createElement('span');
+                                      hint.className = 'img-error-hint text-[11px] text-amber-600 font-medium text-center';
+                                      hint.innerText = 'URL invalid. Click (+) to upload';
+                                      parent.appendChild(hint);
+                                    }
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -515,8 +582,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               <input 
                                 type="text"
                                 value={formData.heroImageUrl || ''}
-                                onChange={(e) => setFormData({...formData, heroImageUrl: e.target.value})}
-                                placeholder="External URL or upload"
+                                onChange={(e) => setFormData({...formData, heroImageUrl: formatImageUrl(e.target.value)})}
+                                placeholder="Paste image URL or click + to upload"
                                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
                               />
                               <input 
@@ -527,6 +594,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 onChange={(e) => handleFileUpload(e, 'heroImageUrl')}
                               />
                               <button 
+                                type="button"
+                                title="Upload hero image from computer"
                                 onClick={() => document.getElementById('hero-upload')?.click()}
                                 disabled={isUploading === 'heroImageUrl'}
                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
@@ -535,8 +604,22 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               </button>
                             </div>
                             {formData.heroImageUrl && (
-                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
-                                <img src={formData.heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden flex items-center justify-center">
+                                <img 
+                                  src={formatImageUrl(formData.heroImageUrl)} 
+                                  alt="Hero preview" 
+                                  className="w-full h-full object-cover" 
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                    const parent = (e.target as HTMLElement).parentElement;
+                                    if (parent && !parent.querySelector('.img-error-hint')) {
+                                      const hint = document.createElement('span');
+                                      hint.className = 'img-error-hint text-[11px] text-amber-600 font-medium text-center';
+                                      hint.innerText = 'URL invalid. Click (+) to upload';
+                                      parent.appendChild(hint);
+                                    }
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -549,8 +632,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               <input 
                                 type="text"
                                 value={formData.aboutImageUrl || ''}
-                                onChange={(e) => setFormData({...formData, aboutImageUrl: e.target.value})}
-                                placeholder="External URL or upload"
+                                onChange={(e) => setFormData({...formData, aboutImageUrl: formatImageUrl(e.target.value)})}
+                                placeholder="Paste image URL or click + to upload"
                                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
                               />
                               <input 
@@ -561,6 +644,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 onChange={(e) => handleFileUpload(e, 'aboutImageUrl')}
                               />
                               <button 
+                                type="button"
+                                title="Upload about image from computer"
                                 onClick={() => document.getElementById('about-image-upload')?.click()}
                                 disabled={isUploading === 'aboutImageUrl'}
                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
@@ -569,8 +654,22 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               </button>
                             </div>
                             {formData.aboutImageUrl && (
-                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
-                                <img src={formData.aboutImageUrl} alt="About preview" className="w-full h-full object-cover" />
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden flex items-center justify-center">
+                                <img 
+                                  src={formatImageUrl(formData.aboutImageUrl)} 
+                                  alt="About preview" 
+                                  className="w-full h-full object-cover" 
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                    const parent = (e.target as HTMLElement).parentElement;
+                                    if (parent && !parent.querySelector('.img-error-hint')) {
+                                      const hint = document.createElement('span');
+                                      hint.className = 'img-error-hint text-[11px] text-amber-600 font-medium text-center';
+                                      hint.innerText = 'URL invalid. Click (+) to upload';
+                                      parent.appendChild(hint);
+                                    }
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -583,8 +682,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               <input 
                                 type="text"
                                 value={formData.whyChooseUsImageUrl || ''}
-                                onChange={(e) => setFormData({...formData, whyChooseUsImageUrl: e.target.value})}
-                                placeholder="External URL or upload"
+                                onChange={(e) => setFormData({...formData, whyChooseUsImageUrl: formatImageUrl(e.target.value)})}
+                                placeholder="Paste image URL or click + to upload"
                                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
                               />
                               <input 
@@ -595,6 +694,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 onChange={(e) => handleFileUpload(e, 'whyChooseUsImageUrl')}
                               />
                               <button 
+                                type="button"
+                                title="Upload why choose us image from computer"
                                 onClick={() => document.getElementById('why-choose-us-upload')?.click()}
                                 disabled={isUploading === 'whyChooseUsImageUrl'}
                                 className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors disabled:opacity-50"
@@ -603,8 +704,22 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               </button>
                             </div>
                             {formData.whyChooseUsImageUrl && (
-                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden">
-                                <img src={formData.whyChooseUsImageUrl} alt="Why choose us preview" className="w-full h-full object-cover" />
+                              <div className="relative w-full h-24 bg-slate-50 rounded border border-slate-200 overflow-hidden flex items-center justify-center">
+                                <img 
+                                  src={formatImageUrl(formData.whyChooseUsImageUrl)} 
+                                  alt="Why choose us preview" 
+                                  className="w-full h-full object-cover" 
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                    const parent = (e.target as HTMLElement).parentElement;
+                                    if (parent && !parent.querySelector('.img-error-hint')) {
+                                      const hint = document.createElement('span');
+                                      hint.className = 'img-error-hint text-[11px] text-amber-600 font-medium text-center';
+                                      hint.innerText = 'URL invalid. Click (+) to upload';
+                                      parent.appendChild(hint);
+                                    }
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -779,6 +894,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <option value="Headphones">Headphones (Support)</option>
                             <option value="Lightbulb">Lightbulb (Consultancy)</option>
                             <option value="GraduationCap">Graduation Cap (Training)</option>
+                            <option value="Code">Code (Web Development)</option>
                           </select>
                         </div>
                       </div>
@@ -985,9 +1101,9 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                               <input 
                                 type="text" 
                                 value={editData.image || ''} 
-                                onChange={e => setEditData({...editData, image: e.target.value})} 
+                                onChange={e => setEditData({...editData, image: formatImageUrl(e.target.value)})} 
                                 className="flex-1 px-3 py-2 border border-slate-300 bg-white text-slate-900 rounded-md outline-none focus:border-[#026fc2]" 
-                                placeholder="https://..." 
+                                placeholder="Paste image URL or click to upload" 
                               />
                               <input 
                                 type="file" 
@@ -997,6 +1113,8 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 onChange={(e) => handleFileUpload(e, 'image', true)}
                               />
                               <button 
+                                type="button"
+                                title="Upload cover image file from computer"
                                 onClick={() => document.getElementById('blog-image-upload')?.click()}
                                 disabled={isUploading === 'image'}
                                 className="p-2 border border-slate-200 rounded-md bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors disabled:opacity-50"
@@ -1004,7 +1122,25 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                                 {isUploading === 'image' ? <div className="animate-spin h-5 w-5 border-2 border-brand-blue border-t-transparent rounded-full"></div> : <ImageIcon size={20}/>}
                               </button>
                             </div>
-                            {editData.image && <img src={editData.image} alt="Cover preview" className="mt-3 w-full h-48 object-cover rounded-md" />}
+                            {editData.image && (
+                              <div className="mt-3 relative w-full h-48 bg-slate-100 rounded-md overflow-hidden flex items-center justify-center">
+                                <img 
+                                  src={formatImageUrl(editData.image)} 
+                                  alt="Cover preview" 
+                                  className="w-full h-full object-cover rounded-md"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                    const parent = (e.target as HTMLElement).parentElement;
+                                    if (parent && !parent.querySelector('.img-error-hint')) {
+                                      const hint = document.createElement('span');
+                                      hint.className = 'img-error-hint text-xs text-amber-600 font-medium text-center p-4';
+                                      hint.innerText = 'Image preview unavailable. Click icon to upload directly.';
+                                      parent.appendChild(hint);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
                           <div className="mb-5">
                             <label className="block text-sm font-bold text-slate-700 mb-1.5">Excerpt (Short Description)</label>

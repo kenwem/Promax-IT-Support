@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network, Server, Mail, Shield, Headphones, Lightbulb, GraduationCap, Check } from 'lucide-react';
+import { Network, Server, Mail, Shield, Headphones, Lightbulb, GraduationCap, Code, Globe, Check } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { Link } from 'react-router-dom';
 
@@ -10,7 +10,9 @@ const iconMap: Record<string, React.ReactNode> = {
   Shield: <Shield className="w-10 h-10 text-white" />,
   Headphones: <Headphones className="w-10 h-10 text-white" />,
   Lightbulb: <Lightbulb className="w-10 h-10 text-white" />,
-  GraduationCap: <GraduationCap className="w-10 h-10 text-white" />
+  GraduationCap: <GraduationCap className="w-10 h-10 text-white" />,
+  Code: <Code className="w-10 h-10 text-white" />,
+  Globe: <Globe className="w-10 h-10 text-white" />
 };
 
 const Services = () => {
@@ -52,7 +54,10 @@ const Services = () => {
                   </ul>
                 </div>
                 <div className="p-6 border-t border-slate-100 bg-slate-50">
-                  <Link to="/contact" className="text-brand-blue font-bold text-sm hover:text-brand-green transition-colors flex items-center justify-between">
+                  <Link 
+                    to={`/contact?service=${encodeURIComponent(service.title)}#contact-form`} 
+                    className="text-brand-blue font-bold text-sm hover:text-brand-green transition-colors flex items-center justify-between"
+                  >
                     Request this service
                     <span className="text-xl">&rarr;</span>
                   </Link>

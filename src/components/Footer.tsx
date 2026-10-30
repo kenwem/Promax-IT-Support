@@ -64,9 +64,17 @@ const Footer = () => {
           {/* Services */}
           <div>
             <h3 className="text-white font-bold text-lg mb-6">Our Services</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {content.services?.map((service: any, index: number) => (
-                <li key={index} className="hover:text-brand-green transition-colors cursor-pointer">{service.title}</li>
+                <li key={service.id || index}>
+                  <Link 
+                    to="/services" 
+                    className="hover:text-brand-green transition-colors flex items-center gap-2 text-slate-300 text-sm"
+                  >
+                    <ArrowRight size={13} className="text-brand-green shrink-0" />
+                    <span>{service.title}</span>
+                  </Link>
+                </li>
               ))}
             </ul>
           </div>
@@ -77,19 +85,19 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="text-brand-green shrink-0 mt-1" size={18} />
-                <span className="whitespace-pre-line">{content.address}</span>
+                <span className="whitespace-pre-line">{content?.address || 'Lagos, Nigeria'}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-brand-green shrink-0" size={18} />
                 <div className="flex flex-col">
-                  <a href={`tel:${content.phone.replace(/\s+/g, '')}`} className="hover:text-white transition-colors">{content.phone}</a>
-                  <a href={content.whatsapp} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-green hover:underline mt-0.5">WhatsApp Us</a>
+                  <a href={`tel:${(content?.phone || '+234 802 236 2666').replace(/\s+/g, '')}`} className="hover:text-white transition-colors">{content?.phone || '+234 802 236 2666'}</a>
+                  <a href={content?.whatsapp || 'https://wa.me/+2348022362666'} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-green hover:underline mt-0.5">WhatsApp Us</a>
                 </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="text-brand-green shrink-0" size={18} />
                 <Link to="/contact#contact-form" className="hover:text-white transition-colors">
-                  {content.email.split('.').map((part: string, i: number, arr: string[]) => (
+                  {(content?.email || 'hello@promaxitsupport.com.ng').split('.').map((part: string, i: number, arr: string[]) => (
                     <React.Fragment key={i}>
                       {part}{i < arr.length - 1 && <>.&#8203;</>}
                     </React.Fragment>
@@ -101,7 +109,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
-          <p>&copy; {content.copyrightYear || '2026'} <span onClick={() => setIsAdminOpen(true)} className="cursor-pointer hover:text-white transition-colors">ProMax</span> IT Support Limited. All Rights Reserved.</p>
+          <p>&copy; {content.copyrightYear || '2026'} <span onClick={() => setIsAdminOpen(true)} className="cursor-pointer hover:text-white transition-colors">Pro<span className="text-brand-green">Max</span></span> IT Support Limited. All Rights Reserved.</p>
         </div>
       </div>
       <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />

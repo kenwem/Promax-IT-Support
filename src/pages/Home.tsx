@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle, Server, Shield, Globe, Users, Clock, Award, Network, Mail, Headphones, Lightbulb, GraduationCap } from 'lucide-react';
+import { ArrowRight, CheckCircle, Server, Shield, Globe, Users, Clock, Award, Network, Mail, Headphones, Lightbulb, GraduationCap, Code } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
+import { formatImageUrl } from '../utils/imageUtils';
 
 const iconMap: Record<string, React.ReactNode> = {
   Network: <Globe className="w-8 h-8 text-brand-green" />,
@@ -11,7 +12,8 @@ const iconMap: Record<string, React.ReactNode> = {
   Shield: <Shield className="w-8 h-8 text-brand-green" />,
   Headphones: <Users className="w-8 h-8 text-brand-green" />,
   Lightbulb: <Lightbulb className="w-8 h-8 text-brand-green" />,
-  GraduationCap: <GraduationCap className="w-8 h-8 text-brand-green" />
+  GraduationCap: <GraduationCap className="w-8 h-8 text-brand-green" />,
+  Code: <Code className="w-8 h-8 text-brand-green" />
 };
 
 const Home = () => {
@@ -25,7 +27,7 @@ const Home = () => {
         {/* Background Image Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
-            src={content?.heroImageUrl || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"} 
+            src={formatImageUrl(content?.heroImageUrl) || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"} 
             alt="Global IT Connectivity and Infrastructure" 
             className="w-full h-full object-cover opacity-100"
           />
@@ -70,7 +72,7 @@ const Home = () => {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <img 
-                src={content?.aboutImageUrl || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
+                src={formatImageUrl(content?.aboutImageUrl) || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
                 alt="Network Infrastructure Analysis" 
                 className="rounded-2xl shadow-2xl"
               />
@@ -144,7 +146,7 @@ const Home = () => {
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose ProMax?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose Pro<span className="text-brand-green">Max</span>?</h2>
               <p className="text-slate-300 mb-8 leading-relaxed">
                 We don't just fix computers; we provide strategic technology partnerships that help your business grow.
               </p>
@@ -182,7 +184,7 @@ const Home = () => {
             <div className="relative">
               <div className="absolute -inset-4 bg-brand-green rounded-2xl opacity-20 blur-lg"></div>
               <img 
-                src={content?.whyChooseUsImageUrl || "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
+                src={formatImageUrl(content?.whyChooseUsImageUrl) || "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
                 alt="Secure Digital Infrastructure" 
                 className="rounded-2xl shadow-2xl relative z-10 border-4 border-white/10"
               />

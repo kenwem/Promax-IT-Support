@@ -39,11 +39,11 @@ const Testimonials = () => {
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-brand-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    {item.name.charAt(0)}
+                    {(item.name || 'C').charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">{item.name}</h4>
-                    <p className="text-sm text-slate-500">{item.role}</p>
+                    <h4 className="font-bold text-slate-900">{item.name || 'Client'}</h4>
+                    <p className="text-sm text-slate-500">{item.role || 'Partner'}</p>
                   </div>
                 </div>
               </div>

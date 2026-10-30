@@ -36,7 +36,9 @@ const Navbar = () => {
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled || !isHome ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'
+        scrolled || !isHome 
+          ? 'bg-white shadow-md py-2.5 border-b border-slate-100' 
+          : 'bg-slate-950/40 backdrop-blur-md py-3.5 border-b border-white/10'
       }`}
     >
       {/* Top Bar - Hidden on mobile, visible on large screens */}
@@ -48,7 +50,7 @@ const Navbar = () => {
 
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group scale-75 origin-left">
+        <Link to="/" className="flex items-center gap-2 group transition-transform hover:opacity-95">
           <Logo darkText={scrolled || !isHome} showSlogan={false} />
         </Link>
 

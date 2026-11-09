@@ -80,6 +80,193 @@ const defaultContent = {
         "CMS Solutions & Maintenance",
         "API Integration & Performance Optimization"
       ]
+    },
+    {
+      id: "service-9",
+      iconName: "Smartphone",
+      title: "Mobile App Development",
+      desc: "Native and cross-platform mobile applications engineered for exceptional user experience, performance, and scale.",
+      features: [
+        "Native iOS & Android Applications",
+        "Cross-Platform Apps (Flutter & React Native)",
+        "Mobile UI/UX Design & Prototyping",
+        "App Store & Google Play Store Publishing",
+        "Push Notifications & Offline Data Sync",
+        "Secure Backend & API Integration"
+      ]
+    }
+  ],
+  portfolio: [
+    {
+      id: "proj-1",
+      title: "Campus-Wide Wi-Fi 6 & High-Density Core Network Overhaul",
+      category: "Network Design & Administration",
+      technologies: ["Cisco Catalyst", "Ubiquiti UniFi", "Sophos Firewall", "VLANs", "Fiber Optics"],
+      client: "Livingstone Educational Academy",
+      year: "2026",
+      image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=1200&auto=format&fit=crop",
+      summary: "Comprehensive enterprise networking design deploying 85+ Wi-Fi 6 access points, core switches, and captive guest access.",
+      description: "Overhauled the entire IT and networking infrastructure for a multi-building academic campus. Installed managed gigabit switches, high-density Wi-Fi 6 access points, segmented VLANs for staff, students, and administration, and configured unified threat management with content web-filtering.",
+      deliverables: [
+        "Seamless roaming Wi-Fi 6 coverage across 4 campus buildings",
+        "Isolated guest network with branded captive login portal",
+        "Layer 7 deep packet inspection and intrusion prevention",
+        "Continuous remote management and telemetry monitoring"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
+    },
+    {
+      id: "proj-2",
+      title: "Enterprise Hybrid Cloud & Automated Disaster Recovery",
+      category: "Server & Infrastructure Management",
+      technologies: ["AWS", "VMware ESXi", "Terraform", "Cisco UTM", "Kubernetes", "Linux"],
+      client: "Prime Heritage Financial Group",
+      year: "2025",
+      image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200&auto=format&fit=crop",
+      summary: "Architected redundant multi-region hybrid cloud infrastructure with automated failover, VPN mesh, and ISO-aligned server hardening.",
+      description: "Migrated legacy on-premise infrastructure to a secure hybrid AWS cloud setup. Configured redundant Cisco site-to-site VPN tunnels, automated multi-zone failover, virtualization cluster orchestration, and centralized telemetry monitoring with automated alert triggers.",
+      deliverables: [
+        "Zero-trust network access (ZTNA) policy implementation",
+        "Multi-region automated disaster recovery with under 5-minute RTO",
+        "24/7 proactive infrastructure health and telemetry monitoring",
+        "60% reduction in on-premise hardware maintenance costs"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
+    },
+    {
+      id: "proj-3",
+      title: "Corporate Microsoft 365 & DMARC Security Architecture",
+      category: "Mail & DNS Solutions",
+      technologies: ["Microsoft 365", "Exchange Online", "DMARC/DKIM/SPF", "Cloudflare DNS", "Mimecast"],
+      client: "Vertex Global Consulting",
+      year: "2025",
+      image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200&auto=format&fit=crop",
+      summary: "Seamless zero-downtime migration of 350+ corporate mailboxes to Microsoft 365 with strict DMARC, DKIM, and anti-spoofing enforcement.",
+      description: "Planned and executed the complete mail and domain name system migration for Vertex Global Consulting. Configured high-availability DNS failovers, strict email authentication to eliminate domain spoofing, and deployed advanced anti-phishing inbound filters.",
+      deliverables: [
+        "Zero-loss migration of 350+ executive mailboxes and shared archives",
+        "100% compliance with RFC DMARC, DKIM, and SPF enforcement",
+        "Redundant anycast DNS configuration for lightning-fast lookups",
+        "Automated spam quarantine and anti-malware attachment scanning"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: false
+    },
+    {
+      id: "proj-4",
+      title: "Next-Gen Firewall Hardening & Zero-Trust Defense",
+      category: "Cybersecurity Solutions",
+      technologies: ["Sophos XG", "Fortinet FortiGate", "SIEM Telemetry", "MFA", "Snort IPS"],
+      client: "Apex Commercial Holdings",
+      year: "2026",
+      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&auto=format&fit=crop",
+      summary: "Enterprise perimeter defense audit, next-generation firewall deployment, and automated intrusion prevention system.",
+      description: "Secured corporate data center perimeter against ransomware, unauthorized intrusions, and data exfiltration. Configured stateful deep packet inspection, automated threat response scripts, and hardened workstation security policies across remote and on-premise staff.",
+      deliverables: [
+        "Deployment of redundant high-availability next-gen firewalls",
+        "Zero-trust network access policies for remote workers",
+        "Continuous vulnerability scanning and automated patch schedules",
+        "Incident response playbooks with 15-minute mitigation response"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
+    },
+    {
+      id: "proj-5",
+      title: "24/7 Managed IT Helpdesk & Remote Infrastructure Monitoring",
+      category: "IT Support & Helpdesk",
+      technologies: ["Proactive RMM", "ServiceNow", "Zabbix", "Remote Desktop SLA", "Active Directory"],
+      client: "Zenith Business Towers",
+      year: "2026",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1200&auto=format&fit=crop",
+      summary: "Comprehensive multi-tenant IT helpdesk and proactive infrastructure monitoring guaranteeing 99.9% employee productivity.",
+      description: "Delivering ongoing 24/7 technical helpdesk, workstation provisioning, printer and peripheral troubleshooting, and real-time network telemetry for corporate tenants across 8 commercial office floors.",
+      deliverables: [
+        "Average ticket resolution time under 18 minutes",
+        "Proactive patch management and workstation health monitoring",
+        "Centralized Active Directory and single sign-on user lifecycle",
+        "Monthly executive IT telemetry and uptime reports"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: false
+    },
+    {
+      id: "proj-6",
+      title: "PaySecure Enterprise Billing & Merchant Portal",
+      category: "Web Development",
+      technologies: ["React", "TypeScript", "Tailwind CSS", "Node.js", "Docker"],
+      client: "PaySecure Financial Services",
+      year: "2025",
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop",
+      summary: "High-volume corporate transaction dashboard, automated reconciliation engine, and merchant checkout portal.",
+      description: "Built a responsive, bank-grade web dashboard enabling business clients to manage multi-currency accounts, execute batch payroll payouts, and visualize revenue analytics in real-time. Compliant with strict cryptographic security standards and two-factor administrator authorization.",
+      deliverables: [
+        "Interactive analytics dashboards with Chart.js and Tailwind",
+        "Role-based multi-user hierarchy with granular permissions",
+        "Automated PDF invoicing and transaction statement exports",
+        "99.99% uptime microservices architecture"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
+    },
+    {
+      id: "proj-7",
+      title: "NovaMarket Multi-Vendor E-Commerce Platform",
+      category: "Web Development",
+      technologies: ["Next.js", "Tailwind CSS", "Paystack", "PostgreSQL", "Cloudinary"],
+      client: "NovaMarket Global",
+      year: "2026",
+      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop",
+      summary: "High-performance digital marketplace featuring instant product search, lightning-fast checkout, and merchant order analytics.",
+      description: "Engineered a modern, responsive multi-vendor e-commerce marketplace. Includes instantaneous search with autocomplete, real-time inventory tracking, integrated payment gateways, and a seller management portal with sales payout automation.",
+      deliverables: [
+        "Sub-second page load times with server-side rendering",
+        "Secure automated checkout with multi-currency payment options",
+        "Dedicated vendor portal with sales analytics and order tracking",
+        "SEO-optimized product catalog with structured schema markup"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: false
+    },
+    {
+      id: "proj-8",
+      title: "Apex Logistics Fleet Tracking & Dispatch Mobile App",
+      category: "Mobile App Development",
+      technologies: ["Flutter", "Firebase", "Google Maps API", "Node.js", "WebSockets"],
+      client: "Apex Logistics International",
+      year: "2025",
+      image: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=1200&auto=format&fit=crop",
+      summary: "Real-time GPS fleet tracking, automated dispatch routing, and driver telemetry mobile application for commercial freight vehicles.",
+      description: "Developed a comprehensive mobile operations platform for Apex Logistics. The app provides real-time telematics tracking, turn-by-turn routing with geofencing alerts, digital proof of delivery with instant barcode scanning, and driver safety scoring. Supported offline synchronization for long-distance transit across regions with patchy cellular coverage.",
+      deliverables: [
+        "Cross-platform iOS and Android mobile app",
+        "Live driver location telemetry with sub-second polling",
+        "Automated digital bill-of-lading and e-signatures",
+        "Offline cache and auto-reconciliation engine"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
+    },
+    {
+      id: "proj-9",
+      title: "MedCare Patient Portal & Telehealth App",
+      category: "Mobile App Development",
+      technologies: ["React Native", "TypeScript", "Express.js", "PostgreSQL"],
+      client: "MedCare Health Network",
+      year: "2026",
+      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1200&auto=format&fit=crop",
+      summary: "Mobile healthcare application enabling patients to book doctor consultations, receive lab test notifications, and access digital prescriptions securely.",
+      description: "Designed and engineered an intuitive patient companion app for iOS and Android. Features include biometric face/fingerprint authentication, instant appointment booking with doctor calendar synchronization, secure in-app messaging, and push notifications for medication reminders.",
+      deliverables: [
+        "Biometric authentication (Touch ID / Face ID)",
+        "Integrated calendar and consultation booking engine",
+        "HIPAA / NDPR compliant encrypted document vault",
+        "Push notification reminders for medications and test results"
+      ],
+      demoUrl: "https://promaxitsupport.com.ng",
+      featured: true
     }
   ],
   testimonials: [
@@ -198,6 +385,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
     const sitePath = `sites/${siteId}`;
     const settingsDoc = doc(db, sitePath, 'settings', 'site');
     const servicesCol = collection(db, sitePath, 'services');
+    const portfolioCol = collection(db, sitePath, 'portfolio');
     const testimonialsCol = collection(db, sitePath, 'testimonials');
     const postsCol = collection(db, sitePath, 'posts');
 
@@ -207,6 +395,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
         ...(prev || defaultContent),
         ...data,
         services: prev?.services?.length ? prev.services : defaultContent.services,
+        portfolio: prev?.portfolio?.length ? prev.portfolio : defaultContent.portfolio,
         testimonials: prev?.testimonials?.length ? prev.testimonials : defaultContent.testimonials,
         blogPosts: prev?.blogPosts?.length ? prev.blogPosts : defaultContent.blogPosts
       }));
@@ -220,7 +409,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
     const unsubServices = onSnapshot(servicesCol, (snapshot) => {
       const remoteServices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (remoteServices.length > 0) {
-        // Ensure all default services (including Web Development) are present if not already added to Firestore
+        // Ensure all default services (including Web Development and Mobile App Development) are present if not already added to Firestore
         const mergedServices = [...remoteServices];
         defaultContent.services.forEach(defService => {
           const exists = remoteServices.some((s: any) => 
@@ -234,6 +423,15 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
         setContent((prev: any) => ({ ...prev, services: mergedServices }));
       } else {
         setContent((prev: any) => ({ ...prev, services: defaultContent.services }));
+      }
+    });
+
+    const unsubPortfolio = onSnapshot(portfolioCol, (snapshot) => {
+      const remotePortfolio = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (remotePortfolio.length > 0) {
+        setContent((prev: any) => ({ ...prev, portfolio: remotePortfolio }));
+      } else {
+        setContent((prev: any) => ({ ...prev, portfolio: defaultContent.portfolio }));
       }
     });
 
@@ -258,6 +456,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
     return () => {
       unsubSettings();
       unsubServices();
+      unsubPortfolio();
       unsubTestimonials();
       unsubPosts();
     };
@@ -274,7 +473,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
 
   const updateAllContent = async (newContent: any) => {
     const sitePath = `sites/${siteId}`;
-    const { services, testimonials, blogPosts, ...settings } = newContent;
+    const { services, portfolio, testimonials, blogPosts, ...settings } = newContent;
     try {
       await setDoc(doc(db, sitePath, 'settings', 'site'), settings, { merge: true });
       // Note: Updating collections is usually done individually in the admin panel

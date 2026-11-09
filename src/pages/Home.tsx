@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle, Server, Shield, Globe, Users, Clock, Award, Network, Mail, Headphones, Lightbulb, GraduationCap, Code } from 'lucide-react';
+import { ArrowRight, CheckCircle, Server, Shield, Globe, Users, Clock, Award, Network, Mail, Headphones, Lightbulb, GraduationCap, Code, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
 import { formatImageUrl } from '../utils/imageUtils';
@@ -13,7 +13,8 @@ const iconMap: Record<string, React.ReactNode> = {
   Headphones: <Users className="w-8 h-8 text-brand-green" />,
   Lightbulb: <Lightbulb className="w-8 h-8 text-brand-green" />,
   GraduationCap: <GraduationCap className="w-8 h-8 text-brand-green" />,
-  Code: <Code className="w-8 h-8 text-brand-green" />
+  Code: <Code className="w-8 h-8 text-brand-green" />,
+  Smartphone: <Smartphone className="w-8 h-8 text-brand-green" />
 };
 
 const Home = () => {

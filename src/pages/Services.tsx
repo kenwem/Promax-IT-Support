@@ -1,5 +1,5 @@
 import React from 'react';
-import { Network, Server, Mail, Shield, Headphones, Lightbulb, GraduationCap, Code, Globe, Check } from 'lucide-react';
+import { Network, Server, Mail, Shield, Headphones, Lightbulb, GraduationCap, Code, Globe, Smartphone, Check } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +12,8 @@ const iconMap: Record<string, React.ReactNode> = {
   Lightbulb: <Lightbulb className="w-10 h-10 text-white" />,
   GraduationCap: <GraduationCap className="w-10 h-10 text-white" />,
   Code: <Code className="w-10 h-10 text-white" />,
-  Globe: <Globe className="w-10 h-10 text-white" />
+  Globe: <Globe className="w-10 h-10 text-white" />,
+  Smartphone: <Smartphone className="w-10 h-10 text-white" />
 };
 
 const Services = () => {

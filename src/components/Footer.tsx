@@ -44,6 +44,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/portfolio" className="hover:text-brand-green transition-colors flex items-center gap-2">
+                  <ArrowRight size={14} /> Portfolio
+                </Link>
+              </li>
+              <li>
                 <Link to="/blog" className="hover:text-brand-green transition-colors flex items-center gap-2">
                   <ArrowRight size={14} /> Blog
                 </Link>

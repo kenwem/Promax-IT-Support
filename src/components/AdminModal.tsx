@@ -19,7 +19,9 @@ import {
   CheckCircle, 
   MessageCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Briefcase,
+  Smartphone
 } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { auth, storage, db, siteId, siteAdminEmail } from '../lib/firebase';
@@ -74,7 +76,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     if (!user || activeTab !== 'comments') return;
     
     setIsModerating(true);
-    const collections = ['posts', 'editorials', 'products', 'trainings', 'services', 'testimonials'];
+    const collections = ['posts', 'editorials', 'products', 'trainings', 'services', 'testimonials', 'portfolio'];
     const allComments: any[] = [];
     
     // This is a complex fetch because we don't use collectionGroup
@@ -284,6 +286,21 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     // Set default empty data based on type
     if (type === 'services') {
       setEditData({ id: Date.now(), iconName: 'Server', title: '', desc: '', features: [] });
+    } else if (type === 'portfolio') {
+      setEditData({
+        id: `proj-${Date.now()}`,
+        title: '',
+        category: 'Network Design & Administration',
+        client: '',
+        year: new Date().getFullYear().toString(),
+        image: '',
+        summary: '',
+        description: '',
+        deliverables: [],
+        technologies: [],
+        demoUrl: '',
+        featured: false
+      });
     } else if (type === 'testimonials') {
       setEditData({ id: Date.now(), name: '', role: '', content: '', rating: 5 });
     } else if (type === 'blogPosts') {
@@ -364,6 +381,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   const tabs = [
     { id: 'general', label: 'General Info', icon: <LayoutDashboard size={18} /> },
     { id: 'services', label: 'Services', icon: <Server size={18} /> },
+    { id: 'portfolio', label: 'Portfolio', icon: <Briefcase size={18} /> },
     { id: 'testimonials', label: 'Testimonials', icon: <MessageSquare size={18} /> },
     { id: 'blog', label: 'Blog Posts', icon: <FileText size={18} /> },
     { id: 'comments', label: 'Moderation', icon: <MessageCircle size={18} /> }
@@ -895,6 +913,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <option value="Lightbulb">Lightbulb (Consultancy)</option>
                             <option value="GraduationCap">Graduation Cap (Training)</option>
                             <option value="Code">Code (Web Development)</option>
+                            <option value="Smartphone">Smartphone (Mobile App)</option>
                           </select>
                         </div>
                       </div>
@@ -919,6 +938,268 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                       <div className="pt-4 flex justify-end">
                         <button onClick={() => handleSaveItem('services')} className="bg-brand-blue text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors">
                           Save Service
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* PORTFOLIO TAB */}
+                {activeTab === 'portfolio' && viewState === 'list' && (
+                  <div className="space-y-4 max-w-4xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-800">Manage Portfolio & Work</h3>
+                        <p className="text-sm text-slate-500">Upload your work, case studies, mobile apps, and web platforms.</p>
+                      </div>
+                      <button onClick={() => handleAddNew('portfolio')} className="bg-brand-blue text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-900 transition-colors shadow-sm">
+                        <Plus size={18} /> Add New Project
+                      </button>
+                    </div>
+                    {(!formData.portfolio || formData.portfolio.length === 0) && (
+                      <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                        <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500 font-medium">No projects added yet.</p>
+                        <button onClick={() => handleAddNew('portfolio')} className="mt-3 text-brand-blue font-bold text-sm hover:underline">
+                          + Add your first work project
+                        </button>
+                      </div>
+                    )}
+                    {formData.portfolio?.map((item: any, index: number) => (
+                      <div key={item.id || index} className="flex justify-between items-center p-4 border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4 min-w-0">
+                          {item.image && (
+                            <img 
+                              src={formatImageUrl(item.image)} 
+                              alt={item.title} 
+                              className="w-16 h-12 rounded-lg object-cover bg-slate-100 shrink-0 border border-slate-200"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-slate-800 truncate">{item.title}</h4>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium shrink-0">
+                                {item.category}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1 truncate">
+                              Client: <span className="font-medium text-slate-700">{item.client || 'N/A'}</span> • Year: {item.year || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 shrink-0 ml-4">
+                          <button onClick={() => handleEdit(index, item)} className="p-2 text-brand-blue hover:bg-blue-50 rounded-lg transition-colors" title="Edit Project">
+                            <Edit size={18} />
+                          </button>
+                          <button onClick={() => handleDeleteClick('portfolio', index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Project">
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === 'portfolio' && viewState === 'edit' && (
+                  <div className="space-y-6 max-w-4xl">
+                    <div className="flex items-center gap-4 mb-6">
+                      <button onClick={() => setViewState('list')} className="text-slate-500 hover:text-slate-900 transition-colors">
+                        <ArrowLeft size={24} />
+                      </button>
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-800">
+                          {editIndex === -1 ? 'Add New Project' : 'Edit Project'}
+                        </h3>
+                        <p className="text-sm text-slate-500">Upload screenshot or image and describe the work done.</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                      {/* Project Image Upload */}
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Project Image / Screenshot</label>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex gap-2">
+                            <input 
+                              type="text"
+                              value={editData.image || ''}
+                              onChange={(e) => setEditData({...editData, image: formatImageUrl(e.target.value)})}
+                              placeholder="Paste external image URL or click (+) to upload from device"
+                              className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none text-sm"
+                            />
+                            <input 
+                              type="file" 
+                              id="portfolio-image-upload" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, 'image', true)}
+                            />
+                            <button 
+                              type="button"
+                              title="Upload project screenshot from computer"
+                              onClick={() => document.getElementById('portfolio-image-upload')?.click()}
+                              disabled={isUploading === 'image'}
+                              className="px-4 py-2 bg-brand-blue text-white hover:bg-blue-900 rounded-lg transition-colors disabled:opacity-50 text-sm font-semibold flex items-center gap-1.5"
+                            >
+                              {isUploading === 'image' ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                              ) : (
+                                <>
+                                  <Plus size={16} /> Upload File
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          {editData.image && (
+                            <div className="relative w-full h-44 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center">
+                              <img 
+                                src={formatImageUrl(editData.image)} 
+                                alt="Project preview" 
+                                className="w-full h-full object-cover" 
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                  const parent = (e.target as HTMLElement).parentElement;
+                                  if (parent && !parent.querySelector('.img-error-hint')) {
+                                    const hint = document.createElement('span');
+                                    hint.className = 'img-error-hint text-[11px] text-amber-600 font-medium text-center';
+                                    hint.innerText = 'Preview unavailable. Click Upload File to attach an image.';
+                                    parent.appendChild(hint);
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Project Title</label>
+                          <input 
+                            type="text"
+                            value={editData.title || ''}
+                            onChange={(e) => setEditData({...editData, title: e.target.value})}
+                            placeholder="e.g. Apex Logistics Fleet Tracking App"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
+                          <select 
+                            value={editData.category || 'Network Design & Administration'}
+                            onChange={(e) => setEditData({...editData, category: e.target.value})}
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none bg-white"
+                          >
+                            <option value="Network Design & Administration">Network Design & Administration</option>
+                            <option value="Server & Infrastructure Management">Server & Infrastructure Management</option>
+                            <option value="Mail & DNS Solutions">Mail & DNS Solutions</option>
+                            <option value="Cybersecurity Solutions">Cybersecurity Solutions</option>
+                            <option value="IT Support & Helpdesk">IT Support & Helpdesk</option>
+                            <option value="IT Consultancy & Advisory">IT Consultancy & Advisory</option>
+                            <option value="Web Development">Web Development</option>
+                            <option value="Mobile App Development">Mobile App Development</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Client / Organization</label>
+                          <input 
+                            type="text"
+                            value={editData.client || ''}
+                            onChange={(e) => setEditData({...editData, client: e.target.value})}
+                            placeholder="e.g. Apex Logistics Ltd"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Year / Timeline</label>
+                          <input 
+                            type="text"
+                            value={editData.year || ''}
+                            onChange={(e) => setEditData({...editData, year: e.target.value})}
+                            placeholder="e.g. 2025"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Live Demo / URL (Optional)</label>
+                          <input 
+                            type="url"
+                            value={editData.demoUrl || ''}
+                            onChange={(e) => setEditData({...editData, demoUrl: e.target.value})}
+                            placeholder="https://..."
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Short Summary (Shows on card)</label>
+                        <input 
+                          type="text"
+                          value={editData.summary || ''}
+                          onChange={(e) => setEditData({...editData, summary: e.target.value})}
+                          placeholder="Brief 1-2 sentence overview of the project..."
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Full Case Study / Description</label>
+                        <textarea 
+                          value={editData.description || ''}
+                          onChange={(e) => setEditData({...editData, description: e.target.value})}
+                          placeholder="Describe the client's problem, your technical solution, and the outcomes achieved..."
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">
+                            Technologies (comma-separated)
+                          </label>
+                          <input 
+                            type="text"
+                            value={Array.isArray(editData.technologies) ? editData.technologies.join(', ') : (editData.technologies || '')}
+                            onChange={(e) => setEditData({
+                              ...editData, 
+                              technologies: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
+                            })}
+                            placeholder="Flutter, React Native, Node.js, Firebase"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">
+                            Key Deliverables (comma-separated)
+                          </label>
+                          <input 
+                            type="text"
+                            value={Array.isArray(editData.deliverables) ? editData.deliverables.join(', ') : (editData.deliverables || '')}
+                            onChange={(e) => setEditData({
+                              ...editData, 
+                              deliverables: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
+                            })}
+                            placeholder="iOS & Android app, Real-time GPS, Offline mode"
+                            className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 focus:border-brand-blue outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-4 flex justify-end">
+                        <button 
+                          onClick={() => handleSaveItem('portfolio')} 
+                          className="bg-brand-blue text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-900 transition-colors shadow-md"
+                        >
+                          Save Project
                         </button>
                       </div>
                     </div>

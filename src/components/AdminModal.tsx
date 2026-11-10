@@ -27,7 +27,7 @@ import { useContent } from '../context/ContentContext';
 import { auth, storage, db, siteId, siteAdminEmail } from '../lib/firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, doc, setDoc, deleteDoc, getDocs, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, getDocs, updateDoc, query, orderBy, arrayUnion } from 'firebase/firestore';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { formatImageUrl, compressAndEncodeImage, compressImageForUpload } from '../utils/imageUtils';
@@ -38,7 +38,7 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   const [password, setPassword] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { content, updateAllContent } = useContent();
+  const { content, updateAllContent, deleteContentItem } = useContent();
   const [formData, setFormData] = useState(content);
   const [activeTab, setActiveTab] = useState('general');
   const [isUploading, setIsUploading] = useState<string | null>(null);
@@ -328,19 +328,51 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
   };
 
   const confirmDelete = async () => {
-    if (confirmDialog) {
-      const { type, index } = confirmDialog;
-      const item = formData[type][index];
-      const sitePath = `sites/${siteId}`;
-      const collectionName = type === 'blogPosts' ? 'posts' : type;
-      
-      try {
-        await deleteDoc(doc(db, sitePath, collectionName, item.id.toString()));
-        setConfirmDialog(null);
-        setNotification({ message: 'Item deleted successfully.', type: 'success' });
-      } catch (err: any) {
-        setNotification({ message: 'Delete failed: ' + err.message, type: 'error' });
+    if (!confirmDialog) return;
+    const { type, index } = confirmDialog;
+    const item = formData[type]?.[index];
+    if (!item) {
+      setConfirmDialog(null);
+      return;
+    }
+
+    const itemId = item.id?.toString();
+    const sitePath = `sites/${siteId}`;
+    const collectionName = type === 'blogPosts' ? 'posts' : type;
+
+    // 1. Instantly remove from local modal formData so it vanishes from the UI immediately
+    setFormData((prev: any) => ({
+      ...prev,
+      [type]: (prev[type] || []).filter((_: any, i: number) => i !== index)
+    }));
+
+    // 2. Instantly update ContentContext so public pages also update immediately
+    if (deleteContentItem && itemId) {
+      deleteContentItem(type, itemId);
+    }
+
+    setConfirmDialog(null);
+
+    try {
+      // 3. Delete document from Firestore collection
+      if (itemId) {
+        await deleteDoc(doc(db, sitePath, collectionName, itemId));
       }
+
+      // 4. Mark item as permanently deleted in settings/site
+      // This permanently suppresses default items even across page refreshes
+      const settingsDocRef = doc(db, sitePath, 'settings', 'site');
+      const deleteKey = type === 'portfolio' ? 'deletedPortfolioIds' : `deleted_${type}_ids`;
+      await setDoc(settingsDocRef, {
+        [deleteKey]: arrayUnion(itemId),
+        [`${type}Initialized`]: true,
+        ...(type === 'portfolio' ? { portfolioInitialized: true } : {})
+      }, { merge: true });
+
+      setNotification({ message: 'Item deleted successfully.', type: 'success' });
+    } catch (err: any) {
+      console.error('Delete error:', err);
+      setNotification({ message: 'Delete failed: ' + err.message, type: 'error' });
     }
   };
 
@@ -348,9 +380,23 @@ const AdminModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     const sitePath = `sites/${siteId}`;
     const collectionName = type === 'blogPosts' ? 'posts' : type;
     const docId = editData.id?.toString() || Date.now().toString();
+    const savedItem = { ...editData, id: docId };
     
+    // Instantly update local modal formData so changes show up immediately in the list
+    setFormData((prev: any) => {
+      const currentList = prev[type] || [];
+      const updatedList = editIndex === -1 
+        ? [...currentList, savedItem]
+        : currentList.map((item: any, i: number) => i === editIndex ? savedItem : item);
+      return { ...prev, [type]: updatedList };
+    });
+
     try {
-      await setDoc(doc(db, sitePath, collectionName, docId), editData);
+      await setDoc(doc(db, sitePath, collectionName, docId), savedItem);
+      if (type === 'portfolio') {
+        const settingsDocRef = doc(db, sitePath, 'settings', 'site');
+        await setDoc(settingsDocRef, { portfolioInitialized: true }, { merge: true });
+      }
       setViewState('list');
       setNotification({ message: 'Item saved successfully.', type: 'success' });
     } catch (err: any) {

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { db, siteId } from '../lib/firebase';
 
@@ -380,6 +380,7 @@ export const ContentContext = createContext<any>(null);
 export const ContentProvider = ({ children }: { children: React.ReactNode }) => {
   const [content, setContent] = useState<any>(defaultContent);
   const [loading, setLoading] = useState(true);
+  const siteSettingsRef = useRef<any>({});
 
   useEffect(() => {
     const sitePath = `sites/${siteId}`;
@@ -391,14 +392,29 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
 
     const unsubSettings = onSnapshot(settingsDoc, (snapshot) => {
       const data = snapshot.exists() ? snapshot.data() : {};
-      setContent((prev: any) => ({
-        ...(prev || defaultContent),
-        ...data,
-        services: prev?.services?.length ? prev.services : defaultContent.services,
-        portfolio: prev?.portfolio?.length ? prev.portfolio : defaultContent.portfolio,
-        testimonials: prev?.testimonials?.length ? prev.testimonials : defaultContent.testimonials,
-        blogPosts: prev?.blogPosts?.length ? prev.blogPosts : defaultContent.blogPosts
-      }));
+      siteSettingsRef.current = data;
+      const deletedPortfolioIds: string[] = data.deletedPortfolioIds || [];
+      const isPortfolioInit = data.portfolioInitialized || false;
+
+      setContent((prev: any) => {
+        // Filter current portfolio against deleted IDs
+        let currentPortfolio = prev?.portfolio;
+        if (!currentPortfolio || currentPortfolio.length === 0) {
+          currentPortfolio = isPortfolioInit ? [] : defaultContent.portfolio;
+        }
+        const filteredPortfolio = (currentPortfolio || []).filter(
+          (p: any) => !deletedPortfolioIds.includes(p.id?.toString())
+        );
+
+        return {
+          ...(prev || defaultContent),
+          ...data,
+          services: prev?.services?.length ? prev.services : defaultContent.services,
+          portfolio: filteredPortfolio,
+          testimonials: prev?.testimonials?.length ? prev.testimonials : defaultContent.testimonials,
+          blogPosts: prev?.blogPosts?.length ? prev.blogPosts : defaultContent.blogPosts
+        };
+      });
       
       if (!snapshot.exists()) {
         setDoc(settingsDoc, defaultContent).catch(err => console.error("Error creating initial settings:", err));
@@ -408,6 +424,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
 
     const unsubServices = onSnapshot(servicesCol, (snapshot) => {
       const remoteServices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const deletedServiceIds: string[] = siteSettingsRef.current?.deleted_services_ids || [];
       if (remoteServices.length > 0) {
         // Ensure all default services (including Web Development and Mobile App Development) are present if not already added to Firestore
         const mergedServices = [...remoteServices];
@@ -416,40 +433,55 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
             s.id === defService.id || 
             (s.title && s.title.toLowerCase().trim() === defService.title.toLowerCase().trim())
           );
-          if (!exists) {
+          if (!exists && !deletedServiceIds.includes(defService.id)) {
             mergedServices.push(defService);
           }
         });
-        setContent((prev: any) => ({ ...prev, services: mergedServices }));
+        const filtered = mergedServices.filter((s: any) => !deletedServiceIds.includes(s.id?.toString()));
+        setContent((prev: any) => ({ ...prev, services: filtered }));
       } else {
-        setContent((prev: any) => ({ ...prev, services: defaultContent.services }));
+        const filteredDefaults = defaultContent.services.filter((s: any) => !deletedServiceIds.includes(s.id?.toString()));
+        setContent((prev: any) => ({ ...prev, services: filteredDefaults }));
       }
     });
 
     const unsubPortfolio = onSnapshot(portfolioCol, (snapshot) => {
       const remotePortfolio = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const deletedIds: string[] = siteSettingsRef.current?.deletedPortfolioIds || [];
+      const isInit = siteSettingsRef.current?.portfolioInitialized || false;
+
       if (remotePortfolio.length > 0) {
-        setContent((prev: any) => ({ ...prev, portfolio: remotePortfolio }));
+        const filtered = remotePortfolio.filter((item: any) => !deletedIds.includes(item.id?.toString()));
+        setContent((prev: any) => ({ ...prev, portfolio: filtered }));
+      } else if (isInit) {
+        setContent((prev: any) => ({ ...prev, portfolio: [] }));
       } else {
-        setContent((prev: any) => ({ ...prev, portfolio: defaultContent.portfolio }));
+        const filteredDefaults = defaultContent.portfolio.filter((item: any) => !deletedIds.includes(item.id?.toString()));
+        setContent((prev: any) => ({ ...prev, portfolio: filteredDefaults }));
       }
     });
 
     const unsubTestimonials = onSnapshot(testimonialsCol, (snapshot) => {
       const testimonials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const deletedTestimonialIds: string[] = siteSettingsRef.current?.deleted_testimonials_ids || [];
       if (testimonials.length > 0) {
-        setContent((prev: any) => ({ ...prev, testimonials }));
+        const filtered = testimonials.filter((t: any) => !deletedTestimonialIds.includes(t.id?.toString()));
+        setContent((prev: any) => ({ ...prev, testimonials: filtered }));
       } else {
-        setContent((prev: any) => ({ ...prev, testimonials: defaultContent.testimonials }));
+        const filteredDefaults = defaultContent.testimonials.filter((t: any) => !deletedTestimonialIds.includes(t.id?.toString()));
+        setContent((prev: any) => ({ ...prev, testimonials: filteredDefaults }));
       }
     });
 
     const unsubPosts = onSnapshot(postsCol, (snapshot) => {
       const blogPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const deletedPostIds: string[] = siteSettingsRef.current?.deleted_blogPosts_ids || [];
       if (blogPosts.length > 0) {
-        setContent((prev: any) => ({ ...prev, blogPosts }));
+        const filtered = blogPosts.filter((p: any) => !deletedPostIds.includes(p.id?.toString()));
+        setContent((prev: any) => ({ ...prev, blogPosts: filtered }));
       } else {
-        setContent((prev: any) => ({ ...prev, blogPosts: defaultContent.blogPosts }));
+        const filteredDefaults = defaultContent.blogPosts.filter((p: any) => !deletedPostIds.includes(p.id?.toString()));
+        setContent((prev: any) => ({ ...prev, blogPosts: filteredDefaults }));
       }
     });
 
@@ -461,6 +493,16 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
       unsubPosts();
     };
   }, []);
+
+  const deleteContentItem = (type: string, itemId: string) => {
+    setContent((prev: any) => {
+      if (!prev || !prev[type]) return prev;
+      return {
+        ...prev,
+        [type]: prev[type].filter((item: any) => item.id?.toString() !== itemId?.toString())
+      };
+    });
+  };
 
   const updateContent = async (key: string, value: any) => {
     const sitePath = `sites/${siteId}`;
@@ -491,7 +533,7 @@ export const ContentProvider = ({ children }: { children: React.ReactNode }) => 
   }
 
   return (
-    <ContentContext.Provider value={{ content, updateContent, updateAllContent }}>
+    <ContentContext.Provider value={{ content, updateContent, updateAllContent, deleteContentItem }}>
       {children}
     </ContentContext.Provider>
   );
